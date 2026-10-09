@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multi-display launcher</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  body { overflow: auto; height: auto; display: block; font-size: 15px; } html { font-size: 15px; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 1rem; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: .6rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+  h2 { margin: 0 0 .5rem; font-size: 1.05rem; } p, li { color: var(--muted); line-height: 1.5; } code { background: var(--panel-2); padding: .1rem .35rem; border-radius: .25rem; color: var(--text); }
+  button, input { font: inherit; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: .4rem; padding: .4rem .8rem; cursor: pointer; }
+  button.primary { background: var(--info); border-color: var(--info); color: #fff; font-weight: 600; }
+  .url { display: flex; gap: .6rem; align-items: center; margin: .35rem 0; } .url code { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: .4rem .6rem; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="panel">
+    <h2>Multi-display launcher</h2>
+    <p>Screens can be spread across several displays (set <b>Displays</b> on a screen in the editor). Each display shows its share of every screen and they all rotate together, driven by one clock on the server. Press <b>Space</b> on any display to hold them all, <b>← →</b> to step them all.</p>
+    <p id="summary">Loading…</p>
+  </div>
+  <div class="panel">
+    <h2>This computer</h2>
+    <p>Open one window per monitor. Your browser may ask permission to see your monitors; if it doesn't support that, windows open on the current monitor — drag each to its screen. Then press <b>F</b> in each window for fullscreen.</p>
+    <button class="primary" id="openAll">Open all displays on my monitors</button> <span id="msg"></span>
+  </div>
+  <div class="panel">
+    <h2>Other computers / kiosks</h2>
+    <p>Point each browser at its URL (they can be different machines — a video wall of small PCs works the same way):</p>
+    <div id="urls"></div>
+  </div>
+</div>
+<script>
+'use strict';
+const q = new URLSearchParams(location.search);
+const KEY = q.get('key') ? `key=${encodeURIComponent(q.get('key'))}` : '';
+const $ = (s) => document.querySelector(s);
+let count = 1;
+const urlFor = (k) => `${location.origin}/?display=${k}${KEY ? '&' + KEY : ''}`;
+(async () => {
+  const c = await (await fetch('/api/config' + (KEY ? '?' + KEY : ''))).json();
+  const spread = c.layout.screens.filter((s) => (s.displays || 1) > 1);
+  count = Math.max(1, ...c.layout.screens.map((s) => s.displays || 1));
+  $('#summary').innerHTML = spread.length
+    ? `<span class="ok">${spread.length} screen${spread.length > 1 ? 's are' : ' is'} spread across displays</span> (${spread.map((s) => `${s.name}: ${s.displays}`).join(', ')}). You need <b>${count}</b> display${count > 1 ? 's' : ''}.`
+    : `<span class="bad">No screen is spread across displays yet.</span> In the editor set <b>Displays</b> to 2 or more on a screen. Until then every display mirrors the same screen.`;
+  $('#urls').innerHTML = Array.from({ length: count }, (_, i) => `<div class="url"><b>Display ${i + 1}</b><code>${urlFor(i + 1)}</code><button data-copy="${i + 1}">Copy</button></div>`).join('');
+})();
+document.addEventListener('click', (e) => { const b = e.target.closest('[data-copy]'); if (b) { navigator.clipboard.writeText(urlFor(b.dataset.copy)); b.textContent = 'Copied'; setTimeout(() => (b.textContent = 'Copy'), 1200); } });
+$('#openAll').addEventListener('click', async () => {
+  const msg = $('#msg'); let screens = [];
+  try { if (window.getScreenDetails) { const d = await window.getScreenDetails(); screens = d.screens; } } catch { msg.textContent = 'Monitor access denied — opening on this monitor instead.'; msg.className = 'bad'; }
+  for (let k = 1; k <= count; k++) {
+    const sc = screens.length ? screens[(k - 1) % screens.length] : null;
+    const feat = sc ? `left=${sc.availLeft},top=${sc.availTop},width=${sc.availWidth},height=${sc.availHeight}` : 'width=1280,height=720';
+    const w = window.open(urlFor(k), `noc-display-${k}`, feat);
+    if (!w) { msg.textContent = 'Pop-ups are blocked — allow pop-ups for this site and try again.'; msg.className = 'bad'; return; }
+  }
+  msg.textContent = `Opened ${count} window${count > 1 ? 's' : ''}${screens.length ? ` across ${screens.length} monitor${screens.length > 1 ? 's' : ''}` : ''}. Press F in each for fullscreen.`; msg.className = 'ok';
+});
+</script>
+</body>
+</html>

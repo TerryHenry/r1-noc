@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R1 NOC Editor</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  body { overflow: auto; height: auto; min-height: 100vh; display: block; font-size: 15px; }
+  html { font-size: 15px; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: .6rem; padding: 1rem; margin-bottom: 1rem; }
+  label { display: inline-flex; flex-direction: column; gap: .2rem; font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  input, select, button { font: inherit; font-size: .95rem; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: .4rem; padding: .35rem .55rem; }
+  input[type=number] { width: 4.5rem; }
+  button { cursor: pointer; } button:hover { border-color: var(--info); }
+  button.primary { background: var(--info); border-color: var(--info); color: #fff; font-weight: 600; }
+  button.danger:hover { border-color: var(--bad); color: var(--bad); }
+  .tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .8rem; align-items: center; }
+  .tabs button.on { border-color: var(--info); color: var(--info); }
+  .wrow { display: flex; flex-wrap: wrap; gap: .6rem; align-items: flex-end; padding: .6rem; border: 1px solid var(--line); border-radius: .5rem; margin-bottom: .5rem; background: var(--panel-2); }
+  .wrow .ttl { flex: 1 1 14rem; font-weight: 600; font-size: 1rem; color: var(--text); text-transform: none; letter-spacing: 0; }
+  .wrow .ttl small { display: block; color: var(--faint); font-weight: 400; font-size: .75rem; }
+  .picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .4rem; margin-top: .6rem; }
+  .picker button { text-align: left; }
+  .picker h4 { grid-column: 1 / -1; margin: .6rem 0 0; font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .picker button { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+  .picker button.is-used { border-color: color-mix(in srgb, var(--ok) 35%, var(--line)); }
+  .pgroup { margin-top: .5rem; border: 1px solid var(--line); border-radius: .5rem; padding: .1rem .7rem .5rem; background: var(--panel-2); }
+  .pgroup summary { cursor: pointer; font-weight: 600; padding: .4rem 0; }
+  .pgroup .cnt { color: var(--faint); font-weight: 400; font-size: .8rem; margin-left: .5rem; }
+  #pq { flex: 1; min-width: 14rem; }
+  .picker button { align-items: flex-start; text-align: left; }
+  .picker button span:first-child { white-space: normal; line-height: 1.25; overflow-wrap: anywhere; }
+  .picker button .tag { margin-top: .15rem; }
+  .tag { font-size: .7rem; color: var(--faint); white-space: nowrap; }
+  .tag.used { color: var(--ok); }
+  .picker-head { margin-top: .8rem; color: var(--muted); display: flex; gap: 1rem; align-items: center; }
+  label.inline { flex-direction: row; align-items: center; gap: .4rem; text-transform: none; letter-spacing: 0; font-size: .85rem; }
+  .thr-group { display: flex; gap: .6rem; } .thr { display: flex; gap: .25rem; } .thr input { width: 5rem; } .days { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .top { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
+  #msg { margin-left: auto; font-size: .9rem; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top panel">
+    <label>Dashboard title<input id="title" maxlength="60"></label>
+    <label>Rotate every (sec, 0 = off)<input id="rot" type="number" min="0" max="3600"></label>
+    <span id="msg"></span>
+    <a class="chip" id="view" href="/">← Viewer</a>
+    <a class="chip" id="launch" href="/launch.html">Multi-display launcher</a>
+    <button id="reset" class="danger" title="Replace all screens and widgets with the built-in defaults">Reset to defaults</button>
+    <button class="primary" id="save">Save &amp; apply</button>
+  </div>
+  <details class="panel" id="conn">
+    <summary style="cursor:pointer;font-weight:600">R1 connection <span id="connState" style="font-weight:400;color:var(--muted);margin-left:.6rem"></span></summary>
+    <p style="color:var(--muted);margin:.6rem 0">Create an API application in RUCKUS One (Administration &rarr; Account Management &rarr; API Keys). The secret is stored on this server in <code>data/settings.json</code> and is never sent back to the browser.</p>
+    <div class="top">
+      <label>Tenant ID<input id="s_tenant" size="34" autocomplete="off" spellcheck="false"></label>
+      <label>Client ID<input id="s_client" size="30" autocomplete="off" spellcheck="false"></label>
+      <label>Client secret<input id="s_secret" type="password" size="30" autocomplete="new-password" placeholder="(unchanged)"></label>
+      <label>Region<select id="s_region"><option value="https://api.ruckus.cloud">North America</option><option value="https://api.eu.ruckus.cloud">Europe</option><option value="https://api.asia.ruckus.cloud">Asia</option><option value="custom">Custom…</option></select></label>
+      <label>API base URL<input id="s_api" size="30" spellcheck="false"></label>
+      <label>OAuth base URL<input id="s_oauth" size="30" spellcheck="false"></label>
+      <label>Poll every (sec)<input id="s_poll" type="number" min="15" max="3600"></label>
+    </div>
+    <div style="display:flex;gap:.6rem;align-items:center;margin-top:.8rem">
+      <button class="primary" id="s_save">Save connection</button>
+      <button id="s_test">Test connection</button>
+      <button id="s_diag">Diagnostics</button>
+      <span id="s_msg"></span>
+    </div>
+  <pre id="diag" style="display:none;max-height:22rem;overflow:auto;background:var(--panel-2);border:1px solid var(--line);border-radius:.4rem;padding:.6rem;margin-top:.8rem;font-size:.75rem"></pre>
+  </details>
+  <details class="panel" id="alertsPanel">
+    <summary style="cursor:pointer;font-weight:600">Alerts <span style="font-weight:400;color:var(--muted);margin-left:.6rem">rules that take over the screens and notify you</span></summary>
+    <h4 style="margin:.8rem 0 .3rem;color:var(--muted)">Active right now</h4><div id="activeAlerts"></div>
+    <h4 style="margin:.8rem 0 .3rem;color:var(--muted)">Rules</h4><div id="ruleBody"></div>
+    <div style="display:flex;gap:.6rem;align-items:center;margin-top:.6rem"><button id="addRule">+ Add rule</button><button class="primary" id="saveRules">Save rules</button><span id="ruleMsg"></span></div>
+  </details>
+  <details class="panel" id="notifyPanel">
+    <summary style="cursor:pointer;font-weight:600">Notifications <span style="font-weight:400;color:var(--muted);margin-left:.6rem">Slack, Teams, email, webhook</span></summary>
+    <p style="color:var(--muted);margin:.6rem 0">Rules marked <b>Notify</b> send to every enabled channel (filtered by each channel's minimum severity). Secrets are stored on this server and never shown again.</p>
+    <div id="chanBody"></div>
+    <div style="display:flex;gap:.6rem;align-items:center;margin-top:.6rem"><button id="addChan">+ Add channel</button><button class="primary" id="saveChans">Save channels</button><span id="chanMsg"></span></div>
+  </details>
+  <details class="panel" id="repPanel">
+    <summary style="cursor:pointer;font-weight:600">Reports <span style="font-weight:400;color:var(--muted);margin-left:.6rem">daily / weekly snapshots, printable and emailed</span></summary>
+    <p style="color:var(--muted);margin:.6rem 0">A report is a snapshot of a screen (or all screens) of a view, built from the same widgets. It's saved on the server, openable at <code>/report</code> (use <b>Print / save as PDF</b> in the browser), and emailed to your email channels. Times use the server's local time.</p>
+    <div id="repBody"></div>
+    <div style="display:flex;gap:.6rem;align-items:center;margin-top:.6rem"><button id="addRep">+ Add report</button><button class="primary" id="saveReps">Save reports</button><span id="repMsg"></span></div>
+  </details>
+  <details class="panel" id="sched">
+    <summary style="cursor:pointer;font-weight:600">Schedules <span style="font-weight:400;color:var(--muted);margin-left:.6rem">switch views by time of day</span></summary>
+    <div id="schedBody" style="margin-top:.7rem"></div>
+  </details>
+  <div class="panel">
+    <div class="tabs" id="views" style="align-items:center"></div>
+    <div class="tabs" id="tabs"></div>
+    <div id="screen"></div>
+  </div>
+</div>
+<script src="/admin.js"></script>
+<script src="/admin-alerts.js"></script>
+</body>
+</html>
