@@ -170,8 +170,8 @@ The three built-in screens are modelled on RUCKUS One's own pages:
 ![RUCKUS One style Wi-Fi screen](img/r1-wifi.png)
 ![RUCKUS One style Switch screen](img/r1-switch.png)
 
-**What's different from R1:** the numbers come from the public API, so tiles that depend on RUCKUS AI / analytics data are
-omitted — *Incidents*, *Connection Success*, *Time To Connect*, *AP Capacity*, *Top Applications* and airtime. The map is
+**What's different from R1:** the numbers come from R1's APIs, so a few tiles are omitted — *Incidents*, *AP Capacity*,
+*Top Applications* and airtime. *Connection Success* and *Time To Connect* are included via R1's analytics service (experimental, see below). The map is
 replaced by a Venues table. R1's "traffic over a period" is replaced by **measured throughput**: client throughput comes from
 client byte counters, and switch traffic from switch-port counters, each differenced between polls (so switch traffic updates
 every few minutes, when ports are refreshed, and the *Traffic Trend* charts fill in over time). The same screens are in the
@@ -253,6 +253,25 @@ This approximates, but is not identical to, Data Studio's time-binned *Client Th
 > session duration history, MCS rates and AP receive failures. Those exist only in Data Studio. For airtime this has been
 > checked directly: R1's built-in *Airtime* report is Data Studio dashboard #14403, and its API rejects API-key tokens
 > (`The specified alg value is not allowed`), and none of the 31 published API specifications contains an airtime field.
+
+#### Client experience — connection success and failure stages (experimental)
+
+R1's own analytics service (the one behind its Client Experience and health reports) *does* accept an API-key token, even
+though Data Studio doesn't. The server uses it to fetch, every 5 minutes and only while a widget needs it:
+
+- **Connection success** (24 h) — successful vs attempted connections, overall and at each stage:
+  **Association → Authentication → EAP → RADIUS → DHCP**. This is how you see *why* clients fail to connect — for example
+  "association succeeds only 43% of the time" points at RF / capacity, while DHCP failures point at the network.
+- **Time to connect** (average), **connection success over time** (15-minute, last 24 h), **daily success** (last 7 days),
+  and **connected / newly connecting clients** over time.
+- The **Client Experience** tile on the default Dashboard shows *Connection success* and *Time to connect* when this is available.
+- A preset screen, **Connection health (experimental)**, groups them; the widgets are under **Client experience** in the picker.
+- Alert rules can use **Connection success (24 h)** and **Average time to connect**.
+
+> **Experimental.** This service is not part of R1's published API. It may change or stop accepting API keys without notice.
+> If it fails, only these widgets say so (the data-source chip turns amber and shows R1's error code); everything else keeps
+> working. The figures are **network-wide** (no per-venue split yet), and R1's own *Incidents*, *AP Capacity*, *Top
+> Applications*, service-validation and call-quality (MOS) results were refused for API keys, so they are not included.
 
 #### AP load — the closest stand-in for airtime
 

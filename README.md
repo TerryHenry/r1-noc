@@ -41,8 +41,8 @@ The three default screens are modelled on RUCKUS One's own **Dashboard**, **Wi-F
 ![Wi-Fi](docs/img/r1-wifi.png)
 ![Switch](docs/img/r1-switch.png)
 
-Tiles that need RUCKUS AI / analytics data (Incidents, Connection Success, Time To Connect, AP Capacity, Top Applications,
-airtime) aren't available from the public API and are left out. An **AP load** screen (busiest radios, channel load, per-AP load) is provided as the closest stand-in for airtime. Everything is editable, and the old Overview / Clients /
+Connection success, failure stages and time to connect come from R1's own analytics service (**experimental** — undocumented, but it
+accepts API keys). Incidents, AP Capacity, Top Applications and airtime aren't reachable with an API key and are left out. An **AP load** screen (busiest radios, channel load, per-AP load) is provided as the closest stand-in for airtime. Everything is editable, and the old Overview / Clients /
 Infrastructure screens are still available as presets.
 
 ## What you get
