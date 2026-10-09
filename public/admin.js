@@ -50,12 +50,46 @@ function renderSchedules() {
     `<button data-act="addsched" ${layout.views.length ? '' : 'disabled title="Create a view first"'}>+ Add schedule</button> <span style="color:var(--faint);font-size:.85rem">First matching schedule wins · server local time · a window like 18:00 → 06:00 runs overnight.</span>`;
 }
 
+// ---------- display playlists ----------
+const PL = () => { const o = curView < 0 ? layout : layout.views[curView]; o.playlists = o.playlists || []; return o.playlists; };
+let plN = 0;
+function renderPlaylists() {
+  const el = $('#plBody'); if (!el) return;
+  const names = SC().map((x) => x.name); const pl = PL();
+  const n = Math.max(plN, pl.length, 1);
+  const cols = Array.from({ length: n }, (_, d) => { const list = (pl[d] || []).filter((nm) => names.includes(nm));
+    return `<div class="plcol"><h4>Display ${d + 1}</h4>${list.map((nm, i) => `<div class="plitem" data-d="${d}" data-i="${i}"><span>${i + 1}. ${esc(nm)}</span><span class="plbtns"><button data-pl="up" title="Earlier">↑</button><button data-pl="down" title="Later">↓</button><button data-pl="rm" title="Remove">✕</button></span></div>`).join('') || '<p style="color:var(--faint);margin:.2rem 0">all screens</p>'}<a class="chip" href="${api('/?display=' + (d + 1))}" target="_blank">open /?display=${d + 1}</a></div>`; }).join('');
+  el.innerHTML = `<p style="color:var(--muted);margin:.4rem 0">Editing view <b>${esc(curView < 0 ? 'Main' : layout.views[curView].name)}</b>. By default every display rotates through <i>all</i> screens. Give a display a playlist and it rotates through <b>only those screens, in that order</b>; a display with no playlist still shows everything. All displays step together on one shared clock.</p>
+    <label class="inline">Number of displays <input id="pln" type="number" min="1" max="6" value="${n}" style="width:4rem"></label>
+    <div class="plcols">${cols}</div>
+    <h4 style="margin:.9rem 0 .3rem;color:var(--muted)">Pick screens (tick several), then add them to a display</h4>
+    <div class="plpick">${names.map((nm, i) => `<label class="inline"><input type="checkbox" data-plpick="${i}"> ${esc(nm)}</label>`).join('')}</div>
+    <div style="display:flex;gap:.6rem;align-items:center;margin-top:.5rem;flex-wrap:wrap"><select id="plTarget">${Array.from({ length: n }, (_, d) => `<option value="${d}">Display ${d + 1}</option>`).join('')}</select>
+      <button data-pl="add" class="primary">Add ticked screens to this display</button><button data-pl="all">Tick all</button><button data-pl="none">Clear ticks</button><button data-pl="clear" class="danger" title="Remove this display's playlist">Empty this display</button></div>
+    <p style="color:var(--faint);font-size:.85rem;margin:.5rem 0 0">Screens in a playlist are shown whole (a screen's "Displays" split setting only applies to displays without a playlist). Press <b>Save &amp; apply</b> to keep changes.</p>`;
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pl]'); if (!b) return; const act = b.dataset.pl; const pl = PL(); const names = SC().map((x) => x.name);
+  const ticks = () => [...document.querySelectorAll('[data-plpick]')];
+  if (act === 'add') {
+    const d = Number($('#plTarget').value) || 0; while (pl.length <= d) pl.push([]);
+    for (const c of ticks().filter((x) => x.checked)) { const nm = names[Number(c.dataset.plpick)]; if (!pl[d].includes(nm)) pl[d].push(nm); }
+  } else if (act === 'all' || act === 'none') { ticks().forEach((c) => (c.checked = act === 'all')); return; }
+  else if (act === 'clear') { const d = Number($('#plTarget').value) || 0; if (pl[d]) pl[d] = []; }
+  else { const it = b.closest('.plitem'); const d = Number(it.dataset.d), i = Number(it.dataset.i); const list = (pl[d] || []).filter((nm) => names.includes(nm)); pl[d] = list;
+    if (act === 'rm') list.splice(i, 1); else if (act === 'up' && i > 0) [list[i - 1], list[i]] = [list[i], list[i - 1]]; else if (act === 'down' && i < list.length - 1) [list[i + 1], list[i]] = [list[i], list[i + 1]]; }
+  while (pl.length && !pl[pl.length - 1].length && pl.length > plN) pl.pop();
+  renderPlaylists();
+});
+document.addEventListener('change', (e) => { if (e.target.id === 'pln') { plN = Math.max(1, Math.min(6, Number(e.target.value) || 1)); const pl = PL(); while (pl.length > plN) pl.pop(); renderPlaylists(); } });
+
 function render() {
   $('#title').value = layout.title; $('#rot').value = layout.rotateSeconds;
   const vtabs = [['Main', -1], ...layout.views.map((v, i) => [v.name, i])];
   $('#views').innerHTML = vtabs.map(([n, i]) => `<button data-view="${i}" class="${i === curView ? 'on' : ''}">${esc(n)}</button>`).join('') + '<button data-act="addview" title="Create a new view (copy of the current one)">+ View</button>' +
     (curView >= 0 ? ` <label class="inline">Name <input id="vname" value="${esc(layout.views[curView].name)}" maxlength="40" style="width:11rem"></label> <label class="inline">Rotate every <input id="vrot" type="number" min="0" max="3600" value="${layout.views[curView].rotateSeconds}" style="width:4.5rem"> s</label> <button data-act="delview" class="danger">Delete view</button>` : '');
-  renderSchedules();
+  renderSchedules(); renderPlaylists();
+  if (typeof renderDesigner === 'function') setTimeout(renderDesigner, 0);
   $('#tabs').innerHTML = SC().map((s, i) => `<button data-tab="${i}" class="${i === cur ? 'on' : ''}">${esc(s.name)}</button>`).join('') + '<button data-act="addscreen">+ Screen</button>' + (presets.length ? `<select id="preset"><option value="">+ Preset screen…</option>${presets.map((p, i) => `<option value="${i}">${esc(p.name)}</option>`).join('')}</select>` : '');
   const s = SC()[cur];
   const venueOpts = (sel) => `<option value="">All venues</option>` + venues.map((v) => `<option value="${esc(v.id)}" ${v.id === sel ? 'selected' : ''}>${esc(v.name)}</option>`).join('');
@@ -64,6 +98,7 @@ function render() {
       <label>Screen name<input id="sname" value="${esc(s.name)}" maxlength="40"></label>
       <label title="Spread this screen's widgets across several displays. Each display opens /?display=N and all rotate together.">Displays<input id="sdisp" type="number" min="1" max="6" value="${s.displays || 1}"></label>
       <label ${(s.displays || 1) > 1 ? '' : 'style="opacity:.45"'} title="Auto: widgets are cut into groups of similar size, in order. Manual: choose a display for each widget below.">Split<select id="ssplit"><option value="auto" ${s.split !== 'manual' ? 'selected' : ''}>Auto (balanced)</option><option value="manual" ${s.split === 'manual' ? 'selected' : ''}>Manual</option></select></label>
+      <button data-act="design" class="primary" title="Open the visual layout designer: drag widgets to reorder or place them, drag the corner to resize">🎨 Design layout</button>
       <label class="inline" title="Tile this screen with no gaps: widgets keep their order, each row is stretched to the full width and one height. Turn off to use the exact widths/heights below."><input type="checkbox" id="autofit" ${s.auto !== false ? 'checked' : ''}> Auto-fit (no gaps)</label>
       <button data-act="left">◀ Move</button><button data-act="right">Move ▶</button>
       <button data-act="delscreen" class="danger">Delete screen</button>
@@ -144,7 +179,7 @@ document.addEventListener('click', (e) => {
   if (t.dataset.act === 'addsched') { layout.schedules.push({ view: layout.views[0].name, days: [0, 1, 2, 3, 4, 5, 6], from: '18:00', to: '06:00', enabled: true }); renderSchedules(); return; }
   if (t.dataset.act === 'delsched') { layout.schedules.splice(Number(t.closest('.wrow').dataset.si), 1); renderSchedules(); return; }
   if (t.dataset.view !== undefined) { curView = Number(t.dataset.view); cur = 0; showPicker = false; }
-  else if (t.dataset.act === 'addview') { const base = JSON.parse(JSON.stringify(SC())); layout.views.push({ name: `View ${layout.views.length + 1}`, rotateSeconds: layout.rotateSeconds, screens: base }); curView = layout.views.length - 1; cur = 0; say('New view created from a copy of the current one — rename it, then Save & apply.'); }
+  else if (t.dataset.act === 'addview') { const base = JSON.parse(JSON.stringify(SC())); layout.views.push({ name: `View ${layout.views.length + 1}`, rotateSeconds: layout.rotateSeconds, screens: base, playlists: JSON.parse(JSON.stringify(PL())) }); curView = layout.views.length - 1; cur = 0; say('New view created from a copy of the current one — rename it, then Save & apply.'); }
   else if (t.dataset.act === 'delview') { if (confirm(`Delete view "${layout.views[curView].name}" and its schedules?`)) { const gone = layout.views[curView].name; layout.views.splice(curView, 1); layout.schedules = layout.schedules.filter((x) => x.view !== gone); curView = -1; cur = 0; } }
   else if (t.dataset.tab) { cur = Number(t.dataset.tab); showPicker = false; }
   else if (t.dataset.add) { const d = def(t.dataset.add); s.widgets.push({ type: d.type, venue: '', w: d.w, h: d.h, params: {} }); }
@@ -164,7 +199,7 @@ document.addEventListener('input', (e) => {
   if (el.id === 'pq') return;
   if (el.id === 'vname') { const old = layout.views[curView].name; layout.views[curView].name = el.value; layout.schedules.forEach((x) => { if (x.view === old) x.view = el.value; }); const b = document.querySelector(`[data-view="${curView}"]`); if (b) b.textContent = el.value || '…'; return; }
   if (el.id === 'vrot') { layout.views[curView].rotateSeconds = Number(el.value); return; }
-  if (el.id === 'sname') { s.name = el.value; const b = document.querySelector(`[data-tab="${cur}"]`); if (b) b.textContent = el.value || '…'; return; }
+  if (el.id === 'sname') { PL().forEach((l) => { const i = l.indexOf(s.name); if (i >= 0) l[i] = el.value; }); s.name = el.value; const b = document.querySelector(`[data-tab="${cur}"]`); if (b) b.textContent = el.value || '…'; return; }
   if (el.id === 'title') { layout.title = el.value; return; }
   if (el.id === 'rot') { layout.rotateSeconds = Number(el.value); return; }
   const row = el.closest('.wrow'); if (!row) return; const w = s.widgets[Number(row.dataset.i)];

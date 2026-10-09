@@ -11,6 +11,7 @@ const r1 = require('./lib/r1');
 const rules = require('./lib/rules');
 const notify = require('./lib/notify');
 const report = require('./lib/report');
+const feeds = require('./lib/feeds');
 
 let layout = dash.load();
 const refreshNeeds = () => collect.setNeeds(new Set([...widgets.needsFor({ screens: dash.allScreens(layout) }), ...rules.needs()]));
@@ -21,28 +22,29 @@ const clients = new Set(); // SSE connections: { res, venue }  (venue = drill-do
 // Clients compute the current screen from this anchor + the server's clock, so there is no per-rotation traffic.
 let control = { held: false, screen: 0, base: 0, t0: Date.now() };
 const activeView = () => dash.viewByName(layout, dash.scheduledView(layout));
-const nScreens = () => activeView().screens.length;
+// The shared clock is one unbounded step counter; each display takes it modulo the length of ITS playlist, so displays
+// with different playlists stay in lockstep (step / hold / jump act on all of them).
+const maxLen = () => { const v = activeView(); return Math.max(1, v.screens.length, ...(v.playlists || []).map((l) => l.length)); };
 function currentIdx() {
-  const n = nScreens();
-  if (control.held) return Math.max(0, Math.min(control.screen, n - 1));
+  if (control.held) return control.screen;
   const sec = activeView().rotateSeconds;
   const steps = sec > 0 ? Math.floor((Date.now() - control.t0) / (sec * 1000)) : 0;
-  return (((control.base + steps) % n) + n) % n;
+  return control.base + steps;
 }
 function applyControl(body) {
-  const n = nScreens(); const idx = currentIdx(); const now = Date.now();
-  const move = (target) => { target = ((target % n) + n) % n; if (control.held) control.screen = target; else { control.base = target; control.t0 = now; } };
+  const idx = currentIdx(); const now = Date.now();
+  const move = (target) => { if (control.held) control.screen = target; else { control.base = target; control.t0 = now; } };
   switch (body.action) {
     case 'next': move(idx + 1); break;
     case 'prev': move(idx - 1); break;
-    case 'goto': move(Math.round(Number(body.screen)) || 0); break;
+    case 'goto': move(Math.max(0, Math.round(Number(body.screen)) || 0)); break;
     case 'hold': control = { held: true, screen: idx, base: idx, t0: now }; break;
     case 'resume': control = { held: false, screen: idx, base: idx, t0: now }; break;
     default: throw new Error('Unknown control action');
   }
 }
 function reanchorControl() {   // layout changed: keep the current screen if it still exists
-  const idx = Math.min(currentIdx(), nScreens() - 1);
+  const n = maxLen(); const idx = ((currentIdx() % n) + n) % n;   // keep roughly where we were, but within the new layout
   control = { held: control.held, screen: idx, base: idx, t0: Date.now() };
 }
 
@@ -62,7 +64,7 @@ function buildData(venue = '') {
   const S = collect.get();
   const out = {};
   for (const wd of dash.allWidgets(layout)) out[wd.id] = applyThresholds(wd, widgets.compute(venue && !wd.venue ? { ...wd, venue } : wd, S));
-  return { at: S.at, serverNow: Date.now(), view: dash.scheduledView(layout), venue, source: S.source, errors: S.errors, pollSeconds: cfg.pollSeconds, alerts: rules.active(), summary: summaryOf(S), widgets: out };
+  return { at: S.at, serverNow: Date.now(), view: dash.scheduledView(layout), venue, source: S.source, errors: S.errors, pollSeconds: cfg.pollSeconds, alerts: rules.active(), summary: summaryOf(S), ticker: feeds.ticker(), widgets: out };
 }
 // One payload per distinct drill-down venue among the connected clients.
 function broadcastData() {
@@ -174,6 +176,12 @@ const server = http.createServer(async (req, res) => {
           try { const r = await runReport(rep); return json(res, 200, { ok: true, ...r, files: report.files(), reports: report.get() }); } catch (e) { report.mark(rep.id, `Failed: ${e.message}`); return json(res, 200, { ok: false, error: e.message, reports: report.get() }); }
         }
       }
+      if (p === '/api/ticker' || p === '/api/ticker/test') {
+        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires localhost or ?key=<NOC_ADMIN_KEY>' });
+        if (p === '/api/ticker' && req.method === 'GET') return json(res, 200, { config: feeds.get(), status: feeds.status() });
+        if (p === '/api/ticker' && req.method === 'PUT') { try { const c = feeds.save(await readBody(req), broadcastData); broadcastData(); return json(res, 200, { config: c, status: feeds.status() }); } catch (e) { return json(res, 400, { error: e.message }); } }
+        if (p === '/api/ticker/test' && req.method === 'POST') { try { const r = await feeds.test(await readBody(req)); return json(res, 200, { ok: true, lines: r.lines, resolved: r.feed.type === 'weather' ? { lat: r.feed.lat, lon: r.feed.lon, label: r.feed.label } : null }); } catch (e) { return json(res, 200, { ok: false, error: e.message }); } }
+      }
       if (p === '/api/diagnostics') {
         if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access required' });
         const S = collect.get();
@@ -223,6 +231,7 @@ const server = http.createServer(async (req, res) => {
 // ---- polling loop ----
 // Rules run after every poll and every 20 s (so "data is stale" and debounce timers advance even if polling hangs).
 function evaluateRules() { const ev = rules.evaluate(collect.get()); if (ev.length) { notify.dispatch(ev); broadcastData(); } }
+feeds.start(() => broadcastData());
 function cycle() { collect.poll(() => { evaluateRules(); broadcastData(); }); }
 setInterval(evaluateRules, 20000);
 // A scheduled view change (e.g. 18:00 → "After hours") re-anchors the shared rotation clock for every display.

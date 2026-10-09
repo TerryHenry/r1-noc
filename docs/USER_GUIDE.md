@@ -10,11 +10,11 @@ shows the result. You design the screens in a browser-based editor.
 3. [The editor](#the-editor)
 4. [Widgets](#widgets)
    - [Throughput and traffic](#throughput-and-traffic) · [AP groups, RF quality and gauges](#ap-groups-rf-quality-and-gauges)
-5. [Auto-fit and layout](#auto-fit-and-layout)
-6. [Multiple displays and video walls](#multiple-displays-and-video-walls)
+5. [Auto-fit and layout](#auto-fit-and-layout) · [Layout designer](#layout-designer)
+6. [Multiple displays and video walls](#multiple-displays-and-video-walls) · [Display playlists](#display-playlists)
 7. [Views and schedules](#views-and-schedules)
 8. [Thresholds](#thresholds)
-9. [Alerts and notifications](#alerts-and-notifications)
+9. [Alerts and notifications](#alerts-and-notifications) · [Ticker, messages and feeds](#ticker-messages-and-feeds)
 10. [Venue drill-down](#venue-drill-down)
 11. [History](#history)
 12. [Reports](#reports)
@@ -65,7 +65,7 @@ allowed) and a clock. The controls fade away after a few seconds without mouse m
 banner appears if all core data sources fail, or if no fresh data has arrived for a few poll intervals — so a frozen
 wall can never look healthy.
 
-**Bottom ticker:** shows live alerts, or a one-line status (APs, switches, clients, alarms) when all is well.
+**Bottom ticker:** scrolls live alerts first, then your custom messages and news / weather / quote feeds (see [Ticker, messages and feeds](#ticker-messages-and-feeds)); when there is nothing else it shows a one-line status (APs, switches, clients, alarms). Its text size is a setting.
 
 ### Keyboard and mouse
 
@@ -94,6 +94,7 @@ Add to the viewer URL, e.g. `http://server:8080/?screen=Switching&scale=1.25`.
 | `scale=1.25` | enlarge or shrink all text |
 | `theme=light` | light theme (default is dark) |
 | `ticker=0` | hide the bottom ticker |
+| `mode=ticker` | full-screen scrolling-text sign (for a dedicated TV) |
 | `guard=0` / `guard=1` | turn the burn-in guard off / on (on by default for `display=`) |
 | `key=…` | the view key, if one is set |
 
@@ -115,7 +116,9 @@ From top to bottom:
 | **Save & apply** | validates and saves the layout; every open display updates immediately |
 | **R1 connection** | credentials, region, poll interval, **Test connection**, **Diagnostics** |
 | **Alerts** | alert rules and the list of active alerts |
+| **Display playlists** | which screens each monitor shows, in what order |
 | **Notifications** | Slack / Teams / email / webhook channels |
+| **Ticker & feeds** | scrolling messages, news, weather, stock quotes |
 | **Reports** | scheduled report snapshots |
 | **Schedules** | switch views by day and time |
 | **Views / Screens** | the layout itself |
@@ -234,6 +237,31 @@ height. The whole screen is then scaled so it fills the display exactly — font
 
 Charts and lists never scroll: if a card is too short for all its rows, the last rows are dropped.
 
+### Layout designer
+
+Click **🎨 Design layout** on any screen to arrange it visually. The preview is drawn by the same code as the wall, so
+what you see is what the display shows.
+
+![Layout designer](img/designer.png)
+
+| Mode | How it works |
+|---|---|
+| **Auto-fit** | You choose the **order** by dragging a block over another, and give size hints by dragging its corner. The rows still tile with no gaps. |
+| **Free placement** | Every widget has its own **column, row, width and height** on the 12-column grid. Drag blocks anywhere and drag the corner to resize. A block dropped on another pushes it down — nothing ever overlaps. |
+
+- Click a block to select it: the strip underneath shows its width, height, column and row (type exact values), plus
+  Duplicate, Remove and **Options ↓** (jumps to that widget's settings: venue, thresholds, "AP group contains"…).
+- **Keyboard:** with the canvas focused, arrow keys move the selected block (or reorder it in auto-fit); **Shift**+arrows
+  resize; **Delete** removes it.
+- **↶ Undo** steps back through your last 30 changes. **Close gaps** (free placement) pulls everything up to remove empty rows.
+- Switching **Auto-fit → Free placement** freezes today's tiling so nothing jumps; **Free → Auto-fit** keeps your reading
+  order (top-to-bottom, left-to-right).
+- **+ Add widget** opens the catalog; new widgets drop into the first free slot.
+- A screen that is [spread across several displays](#multiple-displays-and-video-walls) lets each display tile its own
+  share automatically; free placement applies when **Displays = 1** (or the screen is in a playlist).
+
+The numeric Width / Height boxes on each widget row still work and stay in sync with the designer.
+
 ---
 
 ## Multiple displays and video walls
@@ -254,6 +282,22 @@ dots and the Hold button on **any** display control **all** of them.
 - Each display auto-fits its own widgets independently.
 - **`/launch.html`** opens one window per monitor for you (it asks the browser for monitor positions where supported)
   and lists the per-display URLs to paste on other machines.
+
+### Display playlists
+
+Instead of splitting one screen across monitors, you can give **each display its own ordered list of screens** — e.g.
+*display 1 rotates Overview → Clients → Switching; display 2 rotates Access → Infrastructure → History → Throughput*.
+
+Open **Display playlists** in the editor (it edits the view you're on):
+
+1. Set **Number of displays**.
+2. **Tick several screens** in the list, choose a target display, and press **Add ticked screens to this display**.
+3. Reorder with **↑ ↓**, remove with **✕**. Repeat for the other displays. A screen can appear in more than one playlist.
+4. **Save & apply**, then open `/?display=1`, `/?display=2`, … on the monitors.
+
+All displays still share one clock: they step, hold and jump together, but each cycles through *its own* list (a display
+with 3 screens and one with 2 simply wrap at different points). A display with **no** playlist shows every screen.
+Screens in a playlist are shown whole — the "spread across displays" split only applies to displays without a playlist.
 
 ---
 
@@ -340,6 +384,33 @@ the server (`data/notify.json`, owner-only) and never shown again — leave a se
 
 ---
 
+## Ticker, messages and feeds
+
+![Ticker and feed widgets](img/ticker.png)
+
+The bar along the bottom of every display scrolls **live alerts first**, then anything you've set up under **Ticker &
+feeds** in the editor:
+
+| Source | What it shows |
+|---|---|
+| **Custom messages** | your own text ("Planned maintenance Saturday 2–4 AM"), styled Normal / Good / Notice / Urgent, with optional *show from* / *until* dates (expired messages drop out by themselves) |
+| **News (RSS / Atom)** | headlines from any feed URL, e.g. `https://feeds.bbci.co.uk/news/rss.xml` |
+| **Weather** | current conditions and today's high/low for a place name (Open-Meteo, no key needed) |
+| **Stock / market quotes** | price and % change since the previous close for stocks (`AAPL`), indices (`^GSPC`), FX (`EURUSD=X`) and crypto (`BTC-USD`) |
+
+Each feed has its own refresh interval and a **Test** button that fetches it right away and shows a preview (a weather
+test also shows which place it resolved to).
+
+- **Text size** (Small / Medium / **Large** / Extra large) and **Scroll speed** are settings; the screen re-fits around the ticker.
+- **Full-screen sign:** `/?mode=ticker` turns a display into a giant scrolling-text board (alerts, messages, feeds) — handy for a lobby TV.
+- **Widgets:** *Message board*, *News headlines*, *Weather* and *Stock / market quotes* cards are in the picker under
+  **Ticker & feeds**, so the same content can sit on a normal screen too.
+- Weather uses **Open-Meteo** and quotes use **Yahoo Finance's free chart service**. Quotes are delayed and the service
+  is unofficial — it may change or stop working without notice. The server needs internet access to reach them; if a
+  feed fails the others keep working and the editor shows the error.
+
+---
+
 ## Venue drill-down
 
 Click a **venue name** anywhere — a bar label, a legend entry, the first column of a table — and the entire screen
@@ -412,6 +483,7 @@ Settings come from environment variables, an optional `.env` file in the project
 | `rules.json` | alert rules |
 | `notify.json` | notification channels incl. secrets (mode 600) |
 | `reports.json`, `reports/` | report definitions and generated reports |
+| `ticker.json` | ticker options, custom messages and feed definitions (kept owner-only) |
 
 **Back up** the whole `data/` folder. **Never commit it** (it's git-ignored).
 
@@ -553,6 +625,7 @@ All accept `?key=` when a view key is set. Those marked *admin* need localhost o
 | `POST /api/config/reset` | *admin* — reset to defaults |
 | `GET/PUT /api/rules`, `GET/PUT /api/notify`, `POST /api/notify/test` | *admin* |
 | `GET/PUT /api/reports`, `POST /api/reports/run` | *admin* |
+| `GET/PUT /api/ticker`, `POST /api/ticker/test` | *admin* — ticker, messages and feeds |
 | `GET/PUT /api/settings`, `POST /api/settings/test`, `GET /api/diagnostics` | *admin* |
 | `GET /report?id=…` | rendered report page |
 
@@ -566,6 +639,8 @@ lib/widgetgen.js     generates most of the widget catalog from tables of fields 
 lib/widgets.js       hand-built widgets + catalog
 lib/rules.js         alert rules engine         lib/notify.js   channels + built-in SMTP client
 lib/report.js        report renderer + schedule  lib/history.js  SQLite metric history
+lib/feeds.js         messages, RSS/Atom, weather, quotes → ticker
+public/layout.js     shared layout maths (viewer + designer)
 lib/dashboard.js     layout validation, views, schedules
 lib/demo.js          synthetic tenant for NOC_DEMO=1
 public/              viewer (app.js), editor (admin*.js), launcher

@@ -38,7 +38,7 @@ Then connect your tenant: `npm start`, open <http://localhost:8080/admin>, fill 
 | ![History](docs/img/history.png) | **History** — now vs yesterday / last week, hour-of-day profiles, peak/average/change scorecards. |
 | ![Report](docs/img/report.png) | **Reports** — scheduled daily/weekly snapshots, saved, printable to PDF and emailed. |
 
-Also: **measured client throughput and traffic** (from counter deltas), **AP-group and radio/channel views**, **multi-display video walls** (one screen spread across several monitors, all in sync), **views + schedules**
+Also: a **drag-and-drop layout designer** (reorder or place every chart exactly where you want it), **per-display playlists**, a **scrolling ticker** for custom messages, news, weather and stock quotes (or a full-screen sign), **measured client throughput and traffic** (from counter deltas), **AP-group and radio/channel views**, **multi-display video walls** (one screen spread across several monitors, all in sync), **views + schedules**
 ("After hours" layout 18:00–06:00), **venue drill-down**, scorecard **thresholds**, and a burn-in guard for TVs.
 
 ## Configuration in one table

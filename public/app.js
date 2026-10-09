@@ -16,11 +16,20 @@ const pinned = q.get('screen');
 // Multi-display: ?display=2 shows only display 2's share of every screen that is spread across displays.
 // Any ?display= client (or ?sync=1) follows the server's shared rotation clock, so all displays change together.
 const DISPLAY = Math.max(0, Math.floor(Number(q.get('display'))) || 0);
+const SIGN = q.get('mode') === 'ticker';   // ?mode=ticker → a dedicated full-screen scrolling-text display
+if (SIGN) document.body.classList.add('sign');
 const SYNC = !pinned && (q.get('sync') === '1' || DISPLAY > 0);
 let control = null, clockOffset = 0;
 // Views: the active one is (local pick) → ?view= → the server's scheduled view → Main.
 let localView = q.get('view') || '', serverView = 'Main', drillVenue = '', venueList = [];
-const viewOf = () => { const n = localView || serverView; const v = (layout.views || []).find((x) => x.name === n); return v ? { name: v.name, rotateSeconds: v.rotateSeconds, screens: v.screens } : { name: 'Main', rotateSeconds: layout.rotateSeconds, screens: layout.screens }; };
+// The active view, narrowed to this display's playlist when it has one (an empty/missing playlist = all screens).
+const viewOf = () => {
+  const n = localView || serverView; const v = (layout.views || []).find((x) => x.name === n);
+  const base = v ? { name: v.name, rotateSeconds: v.rotateSeconds, screens: v.screens, playlists: v.playlists || [] } : { name: 'Main', rotateSeconds: layout.rotateSeconds, screens: layout.screens, playlists: layout.playlists || [] };
+  const pl = DISPLAY > 0 ? base.playlists[DISPLAY - 1] : null;
+  if (pl && pl.length) { const byName = new Map(base.screens.map((x) => [x.name, x])); const list = pl.map((x) => byName.get(x)).filter(Boolean); if (list.length) return { ...base, screens: list, playlist: true }; }
+  return { ...base, playlist: false };
+};
 const scr = () => viewOf().screens;
 let held = q.get('hold') === '1' || (() => { try { return sessionStorage.getItem('noc.hold') === '1'; } catch { return false; } })();
 
@@ -56,6 +65,9 @@ const R = {
   table: (d) => '<table><thead><tr>' + d.columns.map((c) => `<th>${esc(c)}</th>`).join('') + '</tr></thead><tbody>' +
     d.rows.map((r) => `<tr class="${r.tone || ''}">${r.cells.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('') + '</tbody></table>',
 
+  message: (d) => (d.messages.length ? `<div class="msgs">${d.messages.map((m) => `<div class="msg ${esc(m.tone || 'info')}">${esc(m.text)}</div>`).join('')}</div>` : '<div class="empty" style="color:var(--faint)">No messages right now</div>'),
+  weather: (d) => `<div class="wx"><div class="wx-now"><div class="wx-t">${d.now.temp}°<small>${esc(d.units)}</small></div><div class="wx-c"><b>${esc(d.now.text)}</b><span>Feels ${d.now.feels}° · wind ${d.now.wind} ${esc(d.windUnit)} · humidity ${d.now.humidity}%</span><span>${esc(d.place)}</span></div></div>` +
+    `<div class="wx-days">${d.days.map((x, i) => `<div><b>${i === 0 ? 'Today' : new Date(x.date + 'T12:00').toLocaleDateString([], { weekday: 'short' })}</b><span>${x.hi}° / ${x.lo}°</span><span>${esc(x.text)}</span>${x.pop != null ? `<span>${x.pop}% rain</span>` : ''}</div>`).join('')}</div></div>`,
   // Half-circle dial: coloured zones, a needle, and the value underneath.
   gauge: (d) => {
     const R0 = 42, cx = 50, cy = 50; const span = d.max - d.min || 1; const ang = (v) => Math.PI * (1 - Math.max(0, Math.min(1, (v - d.min) / span)));
@@ -130,31 +142,7 @@ function cardHtml(wd, d) {
   const title = d ? d.title : wd.type;
   const tone = d && d.tone ? `tone-${d.tone}` : '';
   const body = !d ? '<div class="empty" style="color:var(--faint)">Waiting for data…</div>' : (d.kind === 'line' || d.kind === 'multiline' || d.kind === 'columns') ? '<div class="line" style="height:100%"></div>' : (R[d.kind] || R.error)(d);
-  return `<section class="card ${tone}" data-id="${wd.id}" style="grid-column:span ${wd.w};grid-row:span ${wd.h}"><h3>${esc(title)}</h3><div class="body">${body}</div></section>`;
-}
-// Auto-fit: keep the user's order, group widgets into rows (≤ 6 per row, ≤ 12 columns of their preferred width),
-// then stretch each row to exactly 12 columns at one shared height — so a screen tiles with no holes.
-function arrange(widgets) {
-  const rows = []; let cur = [], sum = 0;
-  const flush = () => { if (cur.length) rows.push(cur); cur = []; sum = 0; };
-  for (const wd of widgets) {
-    if (cur.length && (sum + wd.w > 12 || cur.length >= 6)) flush();
-    cur.push(wd); sum += wd.w;
-    if (sum >= 12) flush();
-  }
-  flush();
-  const out = [];
-  for (const row of rows) {
-    const total = row.reduce((n, x) => n + x.w, 0);
-    let ws = row.map((x) => Math.max(2, Math.floor((x.w * 12) / total)));
-    let left = 12 - ws.reduce((n, x) => n + x, 0);
-    const order = row.map((x, i) => [((x.w * 12) / total) % 1, i]).sort((a, b) => b[0] - a[0]);
-    for (let k = 0; left > 0; k++, left--) ws[order[k % order.length][1]]++;
-    while (left < 0) { const i = ws.indexOf(Math.max(...ws)); ws[i]--; left++; }   // only if the 2-column minimum overshot
-    const h = Math.max(...row.map((x) => x.h));
-    row.forEach((x, i) => out.push({ ...x, w: ws[i], h }));
-  }
-  return out;
+  return `<section class="card ${tone}" data-id="${wd.id}" style="grid-column:${wd.x + 1} / span ${wd.w};grid-row:${wd.y + 1} / span ${wd.h}"><h3>${esc(title)}</h3><div class="body">${body}</div></section>`;
 }
 // Which widgets belong on each of a screen's N displays: 'manual' uses each widget's Display setting,
 // 'auto' cuts the widget list (in order) into N contiguous groups of roughly equal area.
@@ -174,27 +162,14 @@ function splitWidgets(screen) {
 // With ?display=k a client with more displays than the screen was split for just mirrors them (k wraps around).
 function displayWidgets(screen) {
   const n = screen.displays || 1;
-  if (!DISPLAY || n <= 1) return screen.widgets;
+  if (!DISPLAY || n <= 1 || viewOf().playlist) return screen.widgets;
   return splitWidgets(screen)[(DISPLAY - 1) % n];
 }
-const placedFor = (screen) => { const list = displayWidgets(screen); return screen.auto === false ? list : arrange(list); };
+const placedFor = (screen) => { const list = displayWidgets(screen); return NocLayout.place(screen, list, list !== screen.widgets).list; };
 
-// Simulate CSS grid auto-placement (12 cols, dense) to learn how many rows a screen uses.
-function rowsNeeded(widgets) {
-  const occ = []; let maxR = 0;
-  const free = (rr, cc, w, h) => { if (cc + w > 12) return false; for (let y = rr; y < rr + h; y++) for (let x = cc; x < cc + w; x++) if (occ[y] && occ[y][x]) return false; return true; };
-  for (const wd of widgets) {
-    const w = Math.min(12, wd.w), h = wd.h;
-    let r = 0, c = 0;   // dense packing: first free slot from the top-left, like grid-auto-flow: dense
-    while (!free(r, c, w, h)) { c++; if (c + w > 12) { c = 0; r++; } }
-    for (let y = r; y < r + h; y++) { occ[y] = occ[y] || []; for (let x = c; x < c + w; x++) occ[y][x] = true; }
-    maxR = Math.max(maxR, r + h);
-  }
-  return Math.max(1, maxR);
-}
 // Size rem so the whole screen fills the viewport height exactly (bounded by width so it never gets silly).
 function fitScreen(widgets) {
-  const rows = rowsNeeded(widgets);
+  const rows = NocLayout.rowsNeeded(widgets);
   const banner = $('#banner').classList.contains('show') ? $('#banner').offsetHeight : 0;
   const tickerH = $('#ticker').classList.contains('off') ? 0 : $('#ticker').offsetHeight;
   const avail = innerHeight - banner - tickerH;
@@ -250,7 +225,7 @@ async function sendControl(body) {
 }
 function syncIdx() {
   const n = scr().length; if (!control) return 0;
-  if (control.held) return Math.max(0, Math.min(control.screen, n - 1));
+  if (control.held) return ((control.screen % n) + n) % n;
   const sec = Number(q.get('rotate') ?? viewOf().rotateSeconds);
   const steps = sec > 0 ? Math.floor((Date.now() + clockOffset - control.t0) / (sec * 1000)) : 0;
   return (((control.base + steps) % n) + n) % n;
@@ -291,17 +266,25 @@ function paintAlerts(summary) {
     box.querySelector('.tk-list').innerHTML = tk.slice(0, 5).map((a) => `<div class="tk-item ${a.severity === 'crit' ? '' : 'warn'}"><b>${esc(a.name)}${a.venue ? ' — ' + esc(a.venue) : ''}</b><span>${esc(a.metric)}: ${esc(a.value)}${esc(a.unit)} (${esc(a.op)} ${esc(a.threshold)}${esc(a.unit)}) · for ${ago(a.since)}</span></div>`).join('') + (tk.length > 5 ? `<div class="tk-item warn"><span>…and ${tk.length - 5} more</span></div>` : '');
     box.dataset.keys = JSON.stringify(tk.map((a) => a.key));
   }
-  // ticker: live alerts scroll; otherwise a one-line status
-  const tkr = $('#ticker'); const track = tkr.querySelector('.track');
+  // ticker: live alerts first, then custom messages and feed items; a one-line status when there is nothing else
+  const tkr = $('#ticker'); const track = tkr.querySelector('.track'); const cfgT = (data && data.ticker) || { enabled: true, speed: 70, showStatus: true, segments: [] };
   const live = alerts.filter((a) => !a.acked || a.severity === 'crit');
-  const html = live.length
-    ? live.map((a) => `<span class="${a.severity}">${a.severity === 'crit' ? '●' : '▲'} ${esc(a.message)}${a.acked ? ' (acknowledged)' : ''}</span>`).join('')
-    : summary ? `<span class="okt">● All clear</span><span>APs ${summary.apsUp}/${summary.aps}</span><span>Switches ${summary.swUp}/${summary.sw}</span><span>Clients ${nf.format(summary.clients)}</span><span>Alarms ${summary.alarms}</span>` : '<span>Waiting for data…</span>';
-  if (track.dataset.sig !== html) {
-    track.dataset.sig = html; track.innerHTML = html;
-    const scroll = live.length && html.length > 160;   // only scroll when it would not fit
-    track.classList.toggle('scroll', scroll);
-    if (scroll) track.style.setProperty('--dur', `${Math.max(25, html.length / 8)}s`);
+  const parts = live.map((a) => `<span class="${a.severity}">${a.severity === 'crit' ? '●' : '▲'} ${esc(a.message)}${a.acked ? ' (acknowledged)' : ''}</span>`);
+  if (cfgT.enabled) for (const g of cfgT.segments) parts.push(`<span class="seg ${esc(g.tone)} k-${esc(g.kind)}">${esc(g.text)}</span>`);
+  if (!parts.length && cfgT.enabled && cfgT.showStatus && summary) parts.push(`<span class="okt">● All clear</span>`, `<span>APs ${summary.apsUp}/${summary.aps}</span>`, `<span>Switches ${summary.swUp}/${summary.sw}</span>`, `<span>Clients ${nf.format(summary.clients)}</span>`, `<span>Alarms ${summary.alarms}</span>`);
+  if (!parts.length && !summary) parts.push('<span>Waiting for data…</span>');
+  const html = parts.join('');
+  const SIZES = { small: 3.4, medium: 4.8, large: 6.4, xl: 8.8 };   // ticker height as % of the screen height (text is sized from it)
+  const tkSize = SIZES[cfgT.size] || SIZES.large;
+  if (tkr.dataset.size !== String(tkSize)) { tkr.dataset.size = String(tkSize); tkr.style.setProperty('--tk', tkSize); if (!SIGN && layout) requestAnimationFrame(() => paintScreen(false)); }
+  const hide = !parts.length || q.get('ticker') === '0';
+  if (tkr.classList.contains('off') !== hide) { tkr.classList.toggle('off', hide); if (!SIGN) paintScreen(false); }   // the screen is re-fitted around the ticker's height
+  if (track.dataset.sig !== html + '|' + cfgT.speed + '|' + tkSize) {
+    track.dataset.sig = html + '|' + cfgT.speed + '|' + tkSize; track.classList.remove('scroll'); track.innerHTML = `<span class="copy">${html}</span>`;
+    requestAnimationFrame(() => {   // scroll only when it does not fit: two copies loop seamlessly, text is visible immediately
+      const w = track.scrollWidth;
+      if (w > tkr.clientWidth) { track.innerHTML = `<span class="copy">${html}</span><span class="copy">${html}</span>`; track.classList.add('scroll'); track.style.setProperty('--dur', `${Math.max(10, w / (cfgT.speed || 70))}s`); }
+    });
   }
 }
 $('#takeover').addEventListener('click', async (e) => {
@@ -309,7 +292,6 @@ $('#takeover').addEventListener('click', async (e) => {
   const keys = JSON.parse($('#takeover').dataset.keys || '[]');
   for (const key of keys) await fetch(api('/api/alerts/ack'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, minutes: Number(b.dataset.ack) }) });
 });
-if (q.get('ticker') === '0') $('#ticker').classList.add('off');
 // Burn-in guard (displays/kiosks by default): nudge everything a couple of pixels every few minutes.
 if (q.get('guard') === '1' || (DISPLAY > 0 && q.get('guard') !== '0')) {
   document.body.classList.add('guard');

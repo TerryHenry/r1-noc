@@ -43,9 +43,11 @@ let count = 1;
 const urlFor = (k) => `${location.origin}/?display=${k}${KEY ? '&' + KEY : ''}`;
 (async () => {
   const c = await (await fetch('/api/config' + (KEY ? '?' + KEY : ''))).json();
-  const spread = c.layout.screens.filter((s) => (s.displays || 1) > 1);
-  count = Math.max(1, ...c.layout.screens.map((s) => s.displays || 1));
-  $('#summary').innerHTML = spread.length
+  const sets = [c.layout, ...(c.layout.views || [])];
+  const spread = sets.flatMap((v) => v.screens).filter((s) => (s.displays || 1) > 1);
+  const lists = sets.reduce((n, v) => Math.max(n, (v.playlists || []).length), 0);
+  count = Math.max(1, lists, ...sets.flatMap((v) => v.screens.map((s) => s.displays || 1)));
+  $('#summary').innerHTML = lists ? `<span class="ok">Display playlists are set for ${lists} display${lists > 1 ? 's' : ''}</span> — each one rotates through its own ordered list of screens${spread.length ? ' (screens spread across displays are shown whole on playlist displays)' : ''}. You need <b>${count}</b> display${count > 1 ? 's' : ''}.` : spread.length
     ? `<span class="ok">${spread.length} screen${spread.length > 1 ? 's are' : ' is'} spread across displays</span> (${spread.map((s) => `${s.name}: ${s.displays}`).join(', ')}). You need <b>${count}</b> display${count > 1 ? 's' : ''}.`
     : `<span class="bad">No screen is spread across displays yet.</span> In the editor set <b>Displays</b> to 2 or more on a screen. Until then every display mirrors the same screen.`;
   $('#urls').innerHTML = Array.from({ length: count }, (_, i) => `<div class="url"><b>Display ${i + 1}</b><code>${urlFor(i + 1)}</code><button data-copy="${i + 1}">Copy</button></div>`).join('');

@@ -38,6 +38,24 @@
   .picker-head { margin-top: .8rem; color: var(--muted); display: flex; gap: 1rem; align-items: center; }
   label.inline { flex-direction: row; align-items: center; gap: .4rem; text-transform: none; letter-spacing: 0; font-size: .85rem; }
   .thr-group { display: flex; gap: .6rem; } .thr { display: flex; gap: .25rem; } .thr input { width: 5rem; } .days { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .plcols { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .7rem; margin: .7rem 0; }
+  .plcol { background: var(--panel-2); border: 1px solid var(--line); border-radius: .5rem; padding: .6rem .7rem; } .plcol h4 { margin: 0 0 .4rem; }
+  .plitem { display: flex; justify-content: space-between; align-items: center; gap: .4rem; padding: .25rem 0; border-top: 1px solid var(--line); }
+  .plitem button { padding: .1rem .45rem; } .plbtns { white-space: nowrap; }
+  .plpick { display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; }
+  .dz { border: 1px solid var(--info); border-radius: .6rem; padding: .8rem; margin-bottom: 1rem; background: color-mix(in srgb, var(--info) 5%, var(--panel)); }
+  .dz-bar { display: flex; gap: .8rem; align-items: center; flex-wrap: wrap; margin-bottom: .6rem; } .dz-sub { color: var(--faint); font-size: .8rem; }
+  .dz-note { background: var(--panel-2); border-left: 3px solid var(--warn); padding: .4rem .7rem; border-radius: .3rem; font-size: .85rem; color: var(--muted); margin-bottom: .6rem; }
+  .dz-wrap { max-width: 980px; }
+  .dz-canvas { position: relative; border: 1px solid var(--line); border-radius: .4rem; background-color: var(--bg); outline: none;
+    background-image: linear-gradient(to right, var(--line) 1px, transparent 1px), linear-gradient(to bottom, var(--line) 1px, transparent 1px); background-size: calc(100% / 12) 100%, 100% 36px; }
+  .dz-canvas:focus { border-color: var(--info); }
+  .dz-b { position: absolute; box-sizing: border-box; border: 2px solid hsl(var(--h) 55% 55%); background: hsl(var(--h) 45% 30% / .55); border-radius: .35rem; padding: .25rem .4rem; overflow: hidden; cursor: grab; user-select: none; touch-action: none; transition: left .12s, top .12s, width .12s, height .12s; }
+  .dz-b.sel { border-color: var(--info); box-shadow: 0 0 0 2px var(--info); z-index: 2; }
+  .dz-t { font-size: .78rem; font-weight: 600; line-height: 1.15; } .dz-m { font-size: .7rem; color: var(--muted); }
+  .dz-h { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize; background: linear-gradient(135deg, transparent 50%, var(--text) 50%); opacity: .6; border-bottom-right-radius: .25rem; }
+  .dz-insp { display: flex; gap: .7rem; align-items: flex-end; flex-wrap: wrap; margin-top: .6rem; min-height: 2.4rem; }
+  .wrow.flash { outline: 2px solid var(--info); }
   .top { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
   #msg { margin-left: auto; font-size: .9rem; }
   .ok { color: var(--ok); } .bad { color: var(--bad); }
@@ -86,11 +104,20 @@
     <div id="chanBody"></div>
     <div style="display:flex;gap:.6rem;align-items:center;margin-top:.6rem"><button id="addChan">+ Add channel</button><button class="primary" id="saveChans">Save channels</button><span id="chanMsg"></span></div>
   </details>
+  <details class="panel" id="tkPanel">
+    <summary style="cursor:pointer;font-weight:600">Ticker &amp; feeds <span style="font-weight:400;color:var(--muted);margin-left:.6rem">scrolling messages, news, weather, stock quotes</span></summary>
+    <div id="tkBody" style="margin-top:.7rem"></div>
+    <div style="display:flex;gap:.6rem;align-items:center;margin-top:.6rem"><button class="primary" id="saveTicker">Save ticker &amp; feeds</button><span id="tkMsg"></span></div>
+  </details>
   <details class="panel" id="repPanel">
     <summary style="cursor:pointer;font-weight:600">Reports <span style="font-weight:400;color:var(--muted);margin-left:.6rem">daily / weekly snapshots, printable and emailed</span></summary>
     <p style="color:var(--muted);margin:.6rem 0">A report is a snapshot of a screen (or all screens) of a view, built from the same widgets. It's saved on the server, openable at <code>/report</code> (use <b>Print / save as PDF</b> in the browser), and emailed to your email channels. Times use the server's local time.</p>
     <div id="repBody"></div>
     <div style="display:flex;gap:.6rem;align-items:center;margin-top:.6rem"><button id="addRep">+ Add report</button><button class="primary" id="saveReps">Save reports</button><span id="repMsg"></span></div>
+  </details>
+  <details class="panel" id="plPanel">
+    <summary style="cursor:pointer;font-weight:600">Display playlists <span style="font-weight:400;color:var(--muted);margin-left:.6rem">which screens each monitor shows, and in what order</span></summary>
+    <div id="plBody" style="margin-top:.7rem"></div>
   </details>
   <details class="panel" id="sched">
     <summary style="cursor:pointer;font-weight:600">Schedules <span style="font-weight:400;color:var(--muted);margin-left:.6rem">switch views by time of day</span></summary>
@@ -99,10 +126,14 @@
   <div class="panel">
     <div class="tabs" id="views" style="align-items:center"></div>
     <div class="tabs" id="tabs"></div>
+    <div id="designer"></div>
     <div id="screen"></div>
   </div>
 </div>
+<script src="/layout.js"></script>
 <script src="/admin.js"></script>
+<script src="/admin-designer.js"></script>
 <script src="/admin-alerts.js"></script>
+<script src="/admin-feeds.js"></script>
 </body>
 </html>
