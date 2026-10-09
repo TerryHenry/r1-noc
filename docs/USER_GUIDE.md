@@ -281,6 +281,10 @@ less than 3 hours ago. Severity names (Critical ≥ 0.8, High ≥ 0.6, Medium �
 visible here as R1's "high airtime" incidents — the *Airtime incidents* tile shows how many R1 raised (zero simply means R1
 raised none, not that airtime is fine). Impacted-AP/client detail is not available (R1 errors on it).
 
+**Roaming success, average client signal and AP service uptime** (24 h) are also available as tiles (network or per venue).
+**Airtime:** the schema does have airtime series (`airtimeUtilization`, busy, rx, tx), but on our test tenant R1 returned only
+empty values for every filter tried, so there is no airtime widget; the *AP load* stand-ins remain the best option.
+
 **Per venue:** set a widget's **Venue** and these tiles switch to that venue — *Connection success*, *Time to connect*, the
 per-stage success tiles, and all the incident tiles/lists. (Connection *attempts/failed counts*, the stage table and the
 top-N lists stay network-wide; a venue-pinned counts tile shows "network-wide only".) **Connection experience by venue** (table)
