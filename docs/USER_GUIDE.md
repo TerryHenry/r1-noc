@@ -268,10 +268,14 @@ though Data Studio doesn't. The server uses it to fetch, every 5 minutes and onl
 - A preset screen, **Connection health (experimental)**, groups them; the widgets are under **Client experience** in the picker.
 - Alert rules can use **Connection success (24 h)** and **Average time to connect**.
 
+**Top talkers and failures** (same service, 24 h, network-wide): top **applications** (by traffic and by clients), application
+**categories**, and top **SSIDs / APs / clients** by traffic; plus **connection failures by SSID, AP and client maker** for each
+stage, and a "who and where" table with the worst offender per stage. Preset: **Top talkers and failures (experimental)**.
+The failure lists come back empty when there were no failures at that stage.
+
 > **Experimental.** This service is not part of R1's published API. It may change or stop accepting API keys without notice.
 > If it fails, only these widgets say so (the data-source chip turns amber and shows R1's error code); everything else keeps
-> working. The figures are **network-wide** (no per-venue split yet), and R1's own *Incidents*, *AP Capacity*, *Top
-> Applications*, service-validation and call-quality (MOS) results were refused for API keys, so they are not included.
+> working. The figures are **network-wide** (no per-venue split yet), and R1's own *Incidents*, *AP Capacity*, service-validation and call-quality (MOS) results were refused for API keys, so they are not included.
 
 #### AP load — the closest stand-in for airtime
 
