@@ -214,10 +214,15 @@ The server turns that into measured throughput: every poll it compares each clie
 and *bytes difference ÷ elapsed time* is that client's rate. Sum those and you have live throughput for the whole
 network, a venue, a band, an SSID, an AP group…
 
-- Rates appear after the **second poll** (the first one is only a baseline).
-- A client that is new since the last poll, or whose counters reset (it roamed or reconnected), is skipped for that one
-  interval, so there are no bogus spikes. Traffic from a client that disconnects between two polls is not counted, so
-  totals are slightly conservative — a shorter poll interval narrows the gap.
+- Each client keeps a **baseline** — its byte count and the time at the last moment the counter *changed*. When the counter
+  changes again, rate = bytes moved ÷ time since that baseline. This matters because R1 may refresh client counters less
+  often than the server polls: polls where the number hasn't moved yet are **not** treated as 0 Mbps — the last real rate is
+  carried for up to 6 minutes, and only a client that stays unchanged longer than that counts as idle (0).
+- The total rate never depends on R1's up/down split: if only the total is reported, you still get throughput (just no
+  downlink/uplink breakdown for that client).
+- Rates appear once a client's counter has changed at least once after the server first saw it (usually within a couple of
+  minutes). A client with no MAC address, or one whose counters reset (it roamed or reconnected), simply restarts its baseline.
+  Traffic from a client that disconnects between two polls is not counted, so totals are slightly conservative.
 - The server records throughput and the bytes moved in every poll, so **"Total traffic, last 24 h / 7 days"**, up/down
   splits, peak throughput, and now-vs-yesterday comparisons all build up from the day you start it.
 
@@ -613,7 +618,7 @@ viewer URL in fullscreen on login.
 | A widget is empty / zero | click **Diagnostics** — compare the status values and field names with what the widget expects |
 | **Test connection → "did not issue a token"** | wrong Tenant ID / Client ID / secret, or wrong region |
 | **Test connection → HTTP 403** | the API key's role is too restrictive for that query |
-| Throughput shows *measuring…* | rates need two polls; if it never appears, run **Diagnostics** and check `clientTrafficSample` — clients need a MAC address and traffic counters |
+| Throughput shows *measuring…* | rates need two polls; if it never appears, run **Diagnostics** and check `clientTrafficSample` (clients need a MAC address and traffic counters) and `throughputEngine` (counts of clients tracked, changed, carried, idle, without a MAC or without counters) |
 | Trend / history widgets say *collecting history* | they need a few polls (trends) or days (comparisons) of recorded data |
 | Alert fired but no notification | the rule needs **Notify** ticked, and a channel whose **Send from** allows that severity; use **Send test** |
 | Email test fails: *certificate* | tick **Allow self-signed cert** for an internal relay |
