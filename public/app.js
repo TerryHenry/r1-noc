@@ -41,7 +41,7 @@ const R = {
     }).join('');
     const leg = items.map((it, i) => `<div><i style="background:${it.tone ? TONE[it.tone] : CAT[i % CAT.length]}"></i><span class="l" title="${esc(it.label)}">${esc(it.label)}</span><span class="n">${esc(it.text ?? nf.format(it.value))}</span></div>`).join('');
     return `<div class="donut"><svg viewBox="0 0 100 100"><circle r="${r}" cx="50" cy="50" fill="none" stroke="var(--panel-2)" stroke-width="14"/>${arcs}` +
-      `<text class="ctr-v" x="50" y="52" text-anchor="middle" font-size="${String(d.centerText ?? nf.format(d.center ?? total)).length > 6 ? 11 : 17}">${esc(d.centerText ?? nf.format(d.center ?? total))}</text><text class="ctr-l" x="50" y="64" text-anchor="middle" font-size="7">${esc(d.centerLabel || '')}</text></svg><div class="legend">${leg}</div></div>`;
+      `<text class="ctr-v" x="50" y="53" text-anchor="middle" style="font-size:${(() => { const n = String(d.centerText ?? nf.format(d.center ?? total)).length; return n <= 4 ? 17 : n <= 6 ? 14 : n <= 8 ? 10.5 : 8.5; })()}px">${esc(d.centerText ?? nf.format(d.center ?? total))}</text><text class="ctr-l" x="50" y="64" text-anchor="middle" font-size="7">${esc(d.centerLabel || '')}</text></svg><div class="legend">${leg}</div></div>`;
   },
 
   bar: (d) => {
@@ -56,6 +56,16 @@ const R = {
   table: (d) => '<table><thead><tr>' + d.columns.map((c) => `<th>${esc(c)}</th>`).join('') + '</tr></thead><tbody>' +
     d.rows.map((r) => `<tr class="${r.tone || ''}">${r.cells.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('') + '</tbody></table>',
 
+  // Half-circle dial: coloured zones, a needle, and the value underneath.
+  gauge: (d) => {
+    const R0 = 42, cx = 50, cy = 50; const span = d.max - d.min || 1; const ang = (v) => Math.PI * (1 - Math.max(0, Math.min(1, (v - d.min) / span)));
+    const pt = (v, r) => `${(cx + r * Math.cos(ang(v))).toFixed(2)},${(cy - r * Math.sin(ang(v))).toFixed(2)}`;
+    let from = d.min; const arcs = (d.zones || []).map((z) => { const a = `<path d="M${pt(from, R0)} A${R0},${R0} 0 0 1 ${pt(z.to, R0)}" fill="none" stroke="${TONE[z.tone]}" stroke-width="9" opacity=".9"/>`; from = z.to; return a; }).join('');
+    const has = d.value != null; const col = has ? TONE[((d.zones || []).find((z) => d.value <= z.to) || {}).tone] || 'var(--text)' : 'var(--faint)';
+    const needle = has ? `<line x1="${cx}" y1="${cy}" x2="${pt(d.value, R0 - 8).split(',')[0]}" y2="${pt(d.value, R0 - 8).split(',')[1]}" stroke="var(--text)" stroke-width="2.4" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="3" fill="var(--text)"/>` : '';
+    return `<div class="gauge"><svg viewBox="0 0 100 62"><path d="M${pt(d.min, R0)} A${R0},${R0} 0 0 1 ${pt(d.max, R0)}" fill="none" stroke="var(--panel-2)" stroke-width="9"/>${arcs}${needle}` +
+      `<text x="${cx - R0 - 1}" y="60" font-size="5" fill="var(--faint)" text-anchor="start">${d.min}</text><text x="${cx + R0 + 1}" y="60" font-size="5" fill="var(--faint)" text-anchor="end">${d.max}</text></svg><div class="gv" style="color:${col}">${esc(d.text)}</div></div>`;
+  },
   error: (d) => `<div class="err">${esc(d.message)}</div>`
 };
 

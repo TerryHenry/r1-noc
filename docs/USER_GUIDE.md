@@ -9,6 +9,7 @@ shows the result. You design the screens in a browser-based editor.
 2. [The viewer](#the-viewer)
 3. [The editor](#the-editor)
 4. [Widgets](#widgets)
+   - [Throughput and traffic](#throughput-and-traffic) · [AP groups, RF quality and gauges](#ap-groups-rf-quality-and-gauges)
 5. [Auto-fit and layout](#auto-fit-and-layout)
 6. [Multiple displays and video walls](#multiple-displays-and-video-walls)
 7. [Views and schedules](#views-and-schedules)
@@ -146,7 +147,7 @@ Nothing you change is live until you press the relevant **Save** button (each pa
 
 ## Widgets
 
-There are **700+ widgets**, found in the picker under these groups. Use the search box — it matches title, group and
+There are **900+ widgets**, found in the picker under these groups. Use the search box — it matches title, group and
 ID, so `dpsk`, `vlan`, `poe`, `ssid`, `guest`, `yesterday` all work. The tag on each button shows whether you already
 use it (**in use ×2 · 1 here** / **unused**), and **Unused only** filters the list.
 
@@ -157,6 +158,8 @@ use it (**in use ×2 · 1 here** / **unused**), and **Unused only** filters the 
 | **Scorecards** | ~100 single numbers: clients per band, AP availability, switch CPU/memory highs, PoE budget, ports with errors, active/expiring DPSK users, active guests, VLANs in use… |
 | **Trends** | any key metric over time, and category trends ("Clients by SSID over time") |
 | **History** | now-vs-yesterday / last-week overlays, hour-of-day profiles, peak / average / change scorecards |
+| **Gauges, RF** | dials for average signal and SNR per band, AP availability, PoE and CPU; RF-quality tables by venue / AP group / band; coverage-by-band tables filtered to AP groups (see below) |
+| **AP radios** | channel, band, channel width and TX power across all AP radios — the AP channel distribution |
 | **Headline numbers, Breakdowns, Rankings, Lists & tables, Switching, Wi-Fi calling, Wi-Fi health, Client mix, DPSK, Guests, VLANs, Networks, Identity** | hand-built favourites: alarm and offline-device lists, venue health table, VLAN overview, DPSK pools, expiring-soon lists… |
 
 **Reading a widget name.** *"Client traffic by SSID (bars)"* = the **measure** (client traffic) grouped by a **field**
@@ -173,6 +176,45 @@ columns.
 Widgets that need heavier data (ports, DPSK, guests, networks, VLAN pools, identity groups, Wi-Fi calling profiles)
 automatically switch that data source on while they're on a screen. The first poll after you add one can take a minute
 to fill in. If a source fails, only the widgets that need it say so; the rest keep working.
+
+### Throughput and traffic
+
+RUCKUS One's public API reports each client's **cumulative bytes up and down for its current session**, but not a rate.
+The server turns that into measured throughput: every poll it compares each client's counters with the previous poll,
+and *bytes difference ÷ elapsed time* is that client's rate. Sum those and you have live throughput for the whole
+network, a venue, a band, an SSID, an AP group…
+
+- Rates appear after the **second poll** (the first one is only a baseline).
+- A client that is new since the last poll, or whose counters reset (it roamed or reconnected), is skipped for that one
+  interval, so there are no bogus spikes. Traffic from a client that disconnects between two polls is not counted, so
+  totals are slightly conservative — a shorter poll interval narrows the gap.
+- The server records throughput and the bytes moved in every poll, so **"Total traffic, last 24 h / 7 days"**, up/down
+  splits, peak throughput, and now-vs-yesterday comparisons all build up from the day you start it.
+
+This approximates, but is not identical to, Data Studio's time-binned *Client Throughput* and *Traffic* charts: it is
+**measured** between polls rather than R1's own estimate, and it only exists from the time the server has been running.
+
+### AP groups, RF quality and gauges
+
+- **AP groups.** The server reads your AP groups and attaches the group name to every AP and client (clients inherit
+  the group of the AP they're on). That gives you the dimensions **AP group**, **venue / AP group**, **venue / AP group /
+  band** and **venue / AP group / channel** on the client, AP and radio widgets.
+- **"AP group contains" filter.** Client, AP, radio, gauge, scorecard and RF-table widgets have an **AP group contains**
+  box in the editor (e.g. `public`, `guest`, `conference`). Only APs and clients whose AP group name contains that text
+  (case-insensitive) are included — the same idea as Data Studio's *apGroupName ILIKE %text%*. Use it to build "Public
+  coverage / Guest coverage / Staff coverage" panels.
+- **Signal quality measures.** Besides counts, client widgets can show *average SNR*, *weakest signal* and *average time
+  connected*. **RF quality by venue / AP group / band** is a ready-made table of clients, min/avg/max RSS, min/avg/max
+  SNR and noise floor.
+- **Gauges** are dials with coloured zones (green/amber/red): average signal and SNR (all bands, 2.4, 5, 6 GHz), poor-signal
+  clients, AP availability, PoE budget, switch CPU and memory.
+- **Hide Unknown.** Count, bar and donut widgets have a *Hide Unknown* option (set it to `1`) that drops the "Unknown"
+  bucket — handy for client OS and manufacturer charts.
+- **AP radios.** *AP radios by band / channel / width* shows how your channels and channel widths are actually
+  distributed (including per venue / AP group), and average TX power.
+
+> **Not available from the API:** airtime (busy / idle / utilization), per-application traffic, roaming-session counts,
+> session duration history, MCS rates and AP receive failures. Those exist only in Data Studio.
 
 ---
 
@@ -466,6 +508,7 @@ viewer URL in fullscreen on login.
 | A widget is empty / zero | click **Diagnostics** — compare the status values and field names with what the widget expects |
 | **Test connection → "did not issue a token"** | wrong Tenant ID / Client ID / secret, or wrong region |
 | **Test connection → HTTP 403** | the API key's role is too restrictive for that query |
+| Throughput shows *measuring…* | rates need two polls; if it never appears, run **Diagnostics** and check `clientTrafficSample` — clients need a MAC address and traffic counters |
 | Trend / history widgets say *collecting history* | they need a few polls (trends) or days (comparisons) of recorded data |
 | Alert fired but no notification | the rule needs **Notify** ticked, and a channel whose **Send from** allows that severity; use **Send test** |
 | Email test fails: *certificate* | tick **Allow self-signed cert** for an internal relay |
@@ -481,9 +524,9 @@ Server logs go to the terminal (or the service log). Failed notifications and fa
 
 - **Built against the API documentation; live-tenant tuning may be needed.** Core queries (venues, APs, switches,
   clients, alarms) follow shapes already confirmed on a live tenant. Several fields — client SSID/OS/band names,
-  port status words, uptime format, DPSK/guest status values — were mapped from the published schemas and should be
+  port status words, uptime format, DPSK/guest status values, AP group names, AP radio band strings — were mapped from the published schemas and should be
   confirmed once on your tenant with **Diagnostics**.
-- No Data Studio content (application usage, call duration, long-range history).
+- No Data Studio content: application usage, Wi-Fi-calling call duration, airtime, roaming/session history, MCS rates and long-range history are not in the public API. Throughput and traffic are *measured* by the server between polls (see above) and only exist from first run.
 - History begins at first run; weekly comparisons need a week of data.
 - Alert state is in memory: restarting re-fires active alerts.
 - One server process, one tenant. Large tenants (many thousands of ports/clients) make the first fetch slower; heavy

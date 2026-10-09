@@ -8,7 +8,7 @@ editor, get full-screen alerts and Slack/Teams/email notifications, and receive 
 
 - **No dependencies, nothing to install** beyond Node.js 22.5+ (uses the built-in `node:sqlite`).
 - **Browsers hold no credentials** — only the server talks to RUCKUS One, with a read-only API key.
-- **700+ widgets** (clients, APs, switches, ports, alarms, DPSK, guests, VLANs, Wi-Fi calling, history…), searchable,
+- **900+ widgets** (clients, APs, switches, ports, alarms, DPSK, guests, VLANs, Wi-Fi calling, throughput, RF quality gauges, history…), searchable,
   auto-tiled to fill any screen size.
 
 ## Quick start
@@ -38,7 +38,7 @@ Then connect your tenant: `npm start`, open <http://localhost:8080/admin>, fill 
 | ![History](docs/img/history.png) | **History** — now vs yesterday / last week, hour-of-day profiles, peak/average/change scorecards. |
 | ![Report](docs/img/report.png) | **Reports** — scheduled daily/weekly snapshots, saved, printable to PDF and emailed. |
 
-Also: **multi-display video walls** (one screen spread across several monitors, all in sync), **views + schedules**
+Also: **measured client throughput and traffic** (from counter deltas), **AP-group and radio/channel views**, **multi-display video walls** (one screen spread across several monitors, all in sync), **views + schedules**
 ("After hours" layout 18:00–06:00), **venue drill-down**, scorecard **thresholds**, and a burn-in guard for TVs.
 
 ## Configuration in one table

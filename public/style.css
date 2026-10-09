@@ -125,3 +125,7 @@ body.idle { cursor: none; }
 .tk-actions button { font: inherit; font-size: 1rem; padding: .55rem 1.2rem; border-radius: .5rem; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); cursor: pointer; }
 .tk-actions button:hover { border-color: var(--info); }
 body.guard header.bar, body.guard #stage, body.guard #ticker { transition: transform 1.5s ease; }
+
+.gauge { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+.gauge svg { width: 100%; max-height: 72%; }
+.gauge .gv { font-size: 2.2rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; margin-top: .1rem; }

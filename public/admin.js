@@ -76,6 +76,7 @@ function render() {
         <label>Width (1–12)<input data-f="w" type="number" min="1" max="12" value="${w.w}"></label>
         <label>Height (rows)<input data-f="h" type="number" min="1" max="10" value="${w.h}"></label>
         ${d.params.map((p) => `<label>${esc(p.label)}<input data-p="${p.name}" type="number" min="1" value="${w.params[p.name] ?? p.default}"></label>`).join('')}
+        ${d.match ? `<label title="Only include APs/clients whose AP group name contains this text (case-insensitive) — like Data Studio's apGroupName ILIKE %text%">AP group contains<input data-f="match" value="${esc(w.match || '')}" placeholder="all" style="width:9rem"></label>` : ''}
         ${d.numeric ? thresholdsHtml(w) : ''}
         <button data-act="up" title="Move earlier">↑</button><button data-act="down" title="Move later">↓</button><button data-act="del" class="danger">Remove</button>
       </div>`; }).join('') || '<p style="color:var(--muted)">No widgets on this screen yet.</p>'}
@@ -133,7 +134,7 @@ document.addEventListener('change', (e) => {
   if (e.target.id === 'autofit') { SC()[cur].auto = e.target.checked; return; }
   if (e.target.id === 'preset' && e.target.value !== '') {
     const pr = presets[Number(e.target.value)];
-    SC().push({ name: pr.name, widgets: pr.widgets.map((x) => ({ type: x.type, venue: '', w: x.w || (catalog.find((c) => c.type === x.type) || {}).w || 3, h: x.h || (catalog.find((c) => c.type === x.type) || {}).h || 2, params: {} })) });
+    SC().push({ name: pr.name, widgets: pr.widgets.map((x) => ({ type: x.type, venue: '', w: x.w || (catalog.find((c) => c.type === x.type) || {}).w || 3, h: x.h || (catalog.find((c) => c.type === x.type) || {}).h || 2, match: x.match || '', params: x.params || {} })) });
     cur = SC().length - 1; render(); say(`Added "${pr.name}" — click Save & apply to keep it.`); return;
   } if (e.target.id === 'unusedOnly') { unusedOnly = e.target.checked; render(); } });
 
@@ -167,7 +168,7 @@ document.addEventListener('input', (e) => {
   if (el.id === 'title') { layout.title = el.value; return; }
   if (el.id === 'rot') { layout.rotateSeconds = Number(el.value); return; }
   const row = el.closest('.wrow'); if (!row) return; const w = s.widgets[Number(row.dataset.i)];
-  if (el.dataset.f) w[el.dataset.f] = el.dataset.f === 'venue' ? el.value : Number(el.value);   // venue is a string; w/h/display are numbers
+  if (el.dataset.f) w[el.dataset.f] = (el.dataset.f === 'venue' || el.dataset.f === 'match') ? el.value : Number(el.value);   // venue is a string; w/h/display are numbers
   if (el.dataset.p) w.params[el.dataset.p] = Number(el.value);
 });
 $('#save').addEventListener('click', async () => {

@@ -77,8 +77,8 @@ confirmed on every tenant; Diagnostics is how they get fixed in minutes.)
 
 Go to **/admin**. The three starter screens (Overview, Clients, Infrastructure) are a fine starting point.
 
-- **+ Add widget** opens a searchable catalog of 700+ widgets. Try searching `dpsk`, `vlan`, `poe`, `guest`, `ssid`.
-- **+ Preset screen…** adds ready-made screens (Switching, Wi-Fi Calling, Client mix).
+- **+ Add widget** opens a searchable catalog of 900+ widgets. Try searching `dpsk`, `vlan`, `poe`, `guest`, `ssid`.
+- **+ Preset screen…** adds ready-made screens (Switching, Wi-Fi Calling, Wireless performance, Student experience, RF coverage, Throughput, Client mix).
 - Leave **Auto-fit (no gaps)** ticked and the screen tiles itself to fill the display.
 - Click **Save & apply** — every open display updates immediately.
 
