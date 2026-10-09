@@ -8,6 +8,27 @@ const RH = 36;   // preview pixels per grid row
 const hue = (s) => { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
 const titleOf = (w) => (catalog.find((c) => c.type === w.type) || { title: w.type, group: '' });
 
+// ---- chart previews: the real chart STYLE with neutral placeholder numbers (never your data) ----
+const C = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)'];
+const sp = {
+  kpi: () => '<div class="sp-kpi"><b>1,248</b><small>▲ 36 vs 1h ago</small></div>',
+  donut: () => { const parts = [38, 27, 20, 15]; let off = 0; const r = 38, Cc = 2 * Math.PI * r; return `<div class="sp-donut"><svg viewBox="0 0 100 100"><circle r="${r}" cx="50" cy="50" fill="none" stroke="var(--panel-2)" stroke-width="14"/>${parts.map((v, i) => { const len = (v / 100) * Cc; const el = `<circle r="${r}" cx="50" cy="50" fill="none" stroke="${C[i]}" stroke-width="14" stroke-dasharray="${len - 1} ${Cc}" stroke-dashoffset="${-off}" transform="rotate(-90 50 50)"/>`; off += len; return el; }).join('')}<text x="50" y="55" text-anchor="middle" font-size="15" fill="var(--text)" font-weight="700">340</text></svg><div class="sp-leg">${parts.map((v, i) => `<i><s style="background:${C[i]}"></s><u style="width:${30 + v}%"></u></i>`).join('')}</div></div>`; },
+  bar: () => `<div class="sp-bars">${[92, 74, 58, 41, 27].map((v, i) => `<div><u></u><span><em style="width:${v}%"></em></span></div>`).join('')}</div>`,
+  line: () => '<svg class="sp-svg" viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M0,30 C10,28 15,18 25,20 S42,34 52,24 S72,6 82,12 S95,18 100,8 L100,40 L0,40Z" fill="var(--c1)" opacity=".18"/><path d="M0,30 C10,28 15,18 25,20 S42,34 52,24 S72,6 82,12 S95,18 100,8" fill="none" stroke="var(--c1)" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>',
+  multiline: () => '<svg class="sp-svg" viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M0,28 C15,22 25,10 40,14 S70,26 100,10" fill="none" stroke="var(--c1)" stroke-width="1.6" vector-effect="non-scaling-stroke"/><path d="M0,32 C20,30 30,22 50,24 S80,12 100,18" fill="none" stroke="var(--c2)" stroke-width="1.6" vector-effect="non-scaling-stroke"/><path d="M0,36 C25,34 45,30 60,31 S85,28 100,29" fill="none" stroke="var(--c3)" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>',
+  columns: () => `<div class="sp-cols">${Array.from({ length: 24 }, (_, i) => `<i style="height:${25 + 55 * Math.exp(-Math.pow((i - 19) / 5, 2)) + 12 * Math.exp(-Math.pow((i - 8) / 3, 2))}%"></i>`).join('')}</div>`,
+  table: () => `<div class="sp-table"><div class="h">${'<u></u>'.repeat(4)}</div>${[0, 1, 2, 3, 4].map(() => `<div>${'<u></u>'.repeat(4)}</div>`).join('')}</div>`,
+  list: () => `<div class="sp-list">${[['var(--bad)', 62], ['var(--warn)', 78], ['var(--info)', 55], ['var(--info)', 70]].map(([c, w]) => `<div style="border-left-color:${c}"><s></s><u style="width:${w}%"></u></div>`).join('')}</div>`,
+  gauge: () => '<div class="sp-gauge"><svg viewBox="0 0 100 58"><path d="M8,50 A42,42 0 0 1 92,50" fill="none" stroke="var(--bad)" stroke-width="9" stroke-dasharray="44 400" opacity=".85"/><path d="M8,50 A42,42 0 0 1 92,50" fill="none" stroke="var(--warn)" stroke-width="9" stroke-dasharray="40 400" stroke-dashoffset="-44" opacity=".85"/><path d="M8,50 A42,42 0 0 1 92,50" fill="none" stroke="var(--ok)" stroke-width="9" stroke-dasharray="60 400" stroke-dashoffset="-84" opacity=".85"/><line x1="50" y1="50" x2="70" y2="24" stroke="var(--text)" stroke-width="2.4" stroke-linecap="round"/><circle cx="50" cy="50" r="3" fill="var(--text)"/></svg><b>28 dB</b></div>',
+  stack: () => `<div class="sp-stack">${[[60, 25, 15], [70, 20, 10]].map((r) => `<div><u></u><span>${r.map((v, i) => `<em style="width:${v}%;background:${['var(--ok)', 'var(--warn)', 'var(--bad)'][i]}"></em>`).join('')}</span></div>`).join('')}</div>`,
+  message: () => '<div class="sp-msg"><u style="width:92%"></u><u style="width:64%"></u></div>',
+  weather: () => '<div class="sp-wx"><div><b>76°F</b><u></u></div><div class="d"><i></i><i></i><i></i></div></div>'
+};
+const sampleOf = (kind) => (sp[kind] || sp.bar)();
+const dzMode = () => { try { return localStorage.getItem('noc.dzview') || 'blocks'; } catch { return 'blocks'; } };
+const setDzMode = (v) => { try { localStorage.setItem('noc.dzview', v); } catch { /* private mode */ } };
+const kindFor = (w) => ((catalog.find((c) => c.type === w.type) || {}).kind) || 'bar';
+
 const dzScreen = () => SC()[cur];
 const dzFree = () => dzScreen().auto === false;
 // Placement of every widget right now (what the wall would draw), indexed like screen.widgets.
@@ -26,10 +47,13 @@ function renderDesigner() {
     <div class="dz-bar"><strong>Layout designer — ${esc(s.name)}</strong>
       <label class="inline"><input type="radio" name="dzmode" value="auto" ${!free ? 'checked' : ''}> Auto-fit <span class="dz-sub">— drag to reorder, resize for a size hint, rows tile with no gaps</span></label>
       <label class="inline"><input type="radio" name="dzmode" value="free" ${free ? 'checked' : ''}> Free placement <span class="dz-sub">— drag anywhere, drag the corner to resize</span></label>
+      <label class="inline dz-pv" title="Blocks: plain boxes. Charts: each box shows the real chart style with placeholder numbers (not your data).">Preview <select id="dzView"><option value="blocks" ${dzMode() === 'blocks' ? 'selected' : ''}>Blocks</option><option value="charts" ${dzMode() === 'charts' ? 'selected' : ''}>Chart previews</option></select></label>
       <span style="flex:1"></span><button id="dzUndo" ${dz.undo.length ? '' : 'disabled'}>↶ Undo</button><button id="dzTidy" ${free ? '' : 'disabled'} title="Pull everything up to close vertical gaps">Close gaps</button><button id="dzAdd">+ Add widget</button><button id="dzClose" class="primary">Done</button></div>
+    ${dzMode() === 'charts' ? '<div class="dz-note" style="border-left-color:var(--info)">Chart previews show each widget\'s real chart style with <b>placeholder numbers</b> — not your data.</div>' : ''}
     ${split ? `<div class="dz-note">This screen is spread across ${s.displays} displays, so each display tiles its own share automatically; free placement applies when Displays = 1 (or in a playlist). The preview below shows the whole screen.</div>` : ''}
     <div class="dz-wrap"><div class="dz-canvas ${free ? 'free' : ''}" id="dzCanvas" tabindex="0" style="height:${rows * RH}px">
-      ${items.map((p, i) => { const w = s.widgets[i]; const t = titleOf(w); return `<div class="dz-b ${i === dz.sel ? 'sel' : ''}" data-i="${i}" style="${blockStyle(p)};--h:${hue(t.group)}"><div class="dz-t">${esc(w.title || t.title)}</div><div class="dz-m">${p.w}×${p.h}${w.venue ? ' · venue' : ''}${w.match ? ` · “${esc(w.match)}”` : ''}</div><span class="dz-h" title="Drag to resize"></span></div>`; }).join('')}
+      ${items.map((p, i) => { const w = s.widgets[i]; const t = titleOf(w); const charts = dzMode() === 'charts';
+        return `<div class="dz-b ${charts ? 'dz-chart' : ''} ${i === dz.sel ? 'sel' : ''}" data-i="${i}" style="${blockStyle(p)};--h:${hue(t.group)}"><div class="dz-t">${esc(w.title || t.title)}</div>${charts ? `<div class="dz-cb">${sampleOf(kindFor(w))}</div><div class="dz-m">${p.w}×${p.h}</div>` : `<div class="dz-m">${p.w}×${p.h}${w.venue ? ' · venue' : ''}${w.match ? ` · “${esc(w.match)}”` : ''}</div>`}<span class="dz-h" title="Drag to resize"></span></div>`; }).join('')}
     </div></div>
     <div class="dz-insp">${inspectorHtml(items)}</div></div>`;
 }
@@ -56,7 +80,7 @@ function setMode(mode) {
 
 // ---- dragging ----
 function pointerGrid(e, canvasRect) { return { col: ((e.clientX - canvasRect.left) / canvasRect.width) * 12, row: (e.clientY - canvasRect.top) / RH }; }
-function paintBlocks(posByIndex) { for (const b of document.querySelectorAll('#dzCanvas .dz-b')) { const p = posByIndex[Number(b.dataset.i)]; if (!p) continue; b.style.cssText = `${blockStyle(p)};--h:${b.style.getPropertyValue('--h')}`; b.querySelector('.dz-m').firstChild.textContent = `${p.w}×${p.h}`; } }
+function paintBlocks(posByIndex) { for (const b of document.querySelectorAll('#dzCanvas .dz-b')) { const p = posByIndex[Number(b.dataset.i)]; if (!p) continue; b.style.cssText = `${blockStyle(p)};--h:${b.style.getPropertyValue('--h')}`; const m = b.querySelector('.dz-m'); if (m && m.firstChild) m.firstChild.textContent = `${p.w}×${p.h}`; } }
 
 document.addEventListener('pointerdown', (e) => {
   const canvas = $('#dzCanvas'); if (!canvas || !canvas.contains(e.target)) return;
@@ -95,6 +119,7 @@ window.addEventListener('pointerup', () => {
 // ---- toolbar / inspector / keyboard ----
 document.addEventListener('change', (e) => {
   if (e.target.name === 'dzmode') { setMode(e.target.value); return; }
+  if (e.target.id === 'dzView') { setDzMode(e.target.value); renderDesigner(); return; }
   const id = e.target.id; if (!['dzW', 'dzH', 'dzX', 'dzY'].includes(id) || dz.sel < 0) return;
   pushUndo(); const ws = dzScreen().widgets; const w = ws[dz.sel]; const p = dzPlacements()[dz.sel]; const v = Number(e.target.value) || 1;
   if (dzFree()) {
