@@ -8,7 +8,7 @@ editor, get full-screen alerts and Slack/Teams/email notifications, and receive 
 
 - **No dependencies, nothing to install** beyond Node.js 22.5+ (uses the built-in `node:sqlite`).
 - **Browsers hold no credentials** — only the server talks to RUCKUS One, with a read-only API key.
-- **900+ widgets** (clients, APs, switches, ports, alarms, DPSK, guests, VLANs, Wi-Fi calling, throughput, RF quality gauges, history…), searchable,
+- **1,000 widgets** (clients, APs, switches, ports, alarms, DPSK, guests, VLANs, Wi-Fi calling, throughput, RF quality gauges, history…), searchable,
   auto-tiled to fill any screen size.
 
 ## Quick start
@@ -42,7 +42,7 @@ The three default screens are modelled on RUCKUS One's own **Dashboard**, **Wi-F
 ![Switch](docs/img/r1-switch.png)
 
 Tiles that need RUCKUS AI / analytics data (Incidents, Connection Success, Time To Connect, AP Capacity, Top Applications,
-airtime) aren't available from the public API and are left out. Everything is editable, and the old Overview / Clients /
+airtime) aren't available from the public API and are left out. An **AP load** screen (busiest radios, channel load, per-AP load) is provided as the closest stand-in for airtime. Everything is editable, and the old Overview / Clients /
 Infrastructure screens are still available as presets.
 
 ## What you get

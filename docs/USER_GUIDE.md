@@ -177,7 +177,7 @@ client byte counters, and switch traffic from switch-port counters, each differe
 every few minutes, when ports are refreshed, and the *Traffic Trend* charts fill in over time). The same screens are in the
 **+ Preset screen…** menu as *RUCKUS One Dashboard / Wi-Fi / Switch*, so you can add them to an existing layout.
 
-There are **900+ widgets**, found in the picker under these groups. Use the search box — it matches title, group and
+There are **1,000 widgets**, found in the picker under these groups. Use the search box — it matches title, group and
 ID, so `dpsk`, `vlan`, `poe`, `ssid`, `guest`, `yesterday` all work. The tag on each button shows whether you already
 use it (**in use ×2 · 1 here** / **unused**), and **Unused only** filters the list.
 
@@ -189,6 +189,7 @@ use it (**in use ×2 · 1 here** / **unused**), and **Unused only** filters the 
 | **Trends** | any key metric over time, and category trends ("Clients by SSID over time") |
 | **History** | now-vs-yesterday / last-week overlays, hour-of-day profiles, peak / average / change scorecards |
 | **Gauges, RF** | dials for average signal and SNR per band, AP availability, PoE and CPU; RF-quality tables by venue / AP group / band; coverage-by-band tables filtered to AP groups (see below) |
+| **AP load** | busiest radios, channel load, per-AP client/throughput table and congestion scorecards — stand-ins for airtime (see below) |
 | **AP radios** | channel, band, channel width and TX power across all AP radios — the AP channel distribution |
 | **Headline numbers, Breakdowns, Rankings, Lists & tables, Switching, Wi-Fi calling, Wi-Fi health, Client mix, DPSK, Guests, VLANs, Networks, Identity** | hand-built favourites: alarm and offline-device lists, venue health table, VLAN overview, DPSK pools, expiring-soon lists… |
 
@@ -249,7 +250,24 @@ This approximates, but is not identical to, Data Studio's time-binned *Client Th
   distributed (including per venue / AP group), and average TX power.
 
 > **Not available from the API:** airtime (busy / idle / utilization), per-application traffic, roaming-session counts,
-> session duration history, MCS rates and AP receive failures. Those exist only in Data Studio.
+> session duration history, MCS rates and AP receive failures. Those exist only in Data Studio. For airtime this has been
+> checked directly: R1's built-in *Airtime* report is Data Studio dashboard #14403, and its API rejects API-key tokens
+> (`The specified alg value is not allowed`), and none of the 31 published API specifications contains an airtime field.
+
+#### AP load — the closest stand-in for airtime
+
+Airtime utilization measures how busy the *channel* is; the API can't tell you that, but it can show where the
+**demand** is. The **AP load** group (and the preset screen **AP load (airtime stand-in)**) shows:
+
+- **Busiest radios** — every AP radio with its band, channel and width, the clients on it, measured throughput, average SNR,
+  share of poor-signal clients and TX power (clients are matched to a radio by their AP and band). Sort by clients or throughput.
+- **Channel load** — per band / channel: how many radios share it, their clients and throughput, and clients per radio.
+- **AP load** — per AP: clients on 2.4 / 5 / 6 GHz, throughput and SNR.
+- **Scorecards** — most clients on one radio, radios with 20+ clients, average clients per active radio, and the most radios
+  sharing one channel in a venue (co-channel density).
+
+These are *indicators*, not airtime: a radio with many clients can be quiet, and a radio with few clients can be saturated by
+one heavy user. Use them to spot likely hotspots, then check airtime in Data Studio.
 
 ---
 
