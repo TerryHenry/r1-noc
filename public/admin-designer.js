@@ -29,7 +29,7 @@ function renderDesigner() {
       <span style="flex:1"></span><button id="dzUndo" ${dz.undo.length ? '' : 'disabled'}>↶ Undo</button><button id="dzTidy" ${free ? '' : 'disabled'} title="Pull everything up to close vertical gaps">Close gaps</button><button id="dzAdd">+ Add widget</button><button id="dzClose" class="primary">Done</button></div>
     ${split ? `<div class="dz-note">This screen is spread across ${s.displays} displays, so each display tiles its own share automatically; free placement applies when Displays = 1 (or in a playlist). The preview below shows the whole screen.</div>` : ''}
     <div class="dz-wrap"><div class="dz-canvas ${free ? 'free' : ''}" id="dzCanvas" tabindex="0" style="height:${rows * RH}px">
-      ${items.map((p, i) => { const w = s.widgets[i]; const t = titleOf(w); return `<div class="dz-b ${i === dz.sel ? 'sel' : ''}" data-i="${i}" style="${blockStyle(p)};--h:${hue(t.group)}"><div class="dz-t">${esc(t.title)}</div><div class="dz-m">${p.w}×${p.h}${w.venue ? ' · venue' : ''}${w.match ? ` · “${esc(w.match)}”` : ''}</div><span class="dz-h" title="Drag to resize"></span></div>`; }).join('')}
+      ${items.map((p, i) => { const w = s.widgets[i]; const t = titleOf(w); return `<div class="dz-b ${i === dz.sel ? 'sel' : ''}" data-i="${i}" style="${blockStyle(p)};--h:${hue(t.group)}"><div class="dz-t">${esc(w.title || t.title)}</div><div class="dz-m">${p.w}×${p.h}${w.venue ? ' · venue' : ''}${w.match ? ` · “${esc(w.match)}”` : ''}</div><span class="dz-h" title="Drag to resize"></span></div>`; }).join('')}
     </div></div>
     <div class="dz-insp">${inspectorHtml(items)}</div></div>`;
 }

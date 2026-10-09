@@ -4,7 +4,7 @@ A **server-side NOC wall display for RUCKUS One**. One small Node.js server poll
 on your network — wall TVs, kiosks, laptops — shows live, customizable dashboards. Design screens in a built-in
 editor, get full-screen alerts and Slack/Teams/email notifications, and receive scheduled reports.
 
-![Overview screen](docs/img/overview.png)
+![Dashboard — modelled on RUCKUS One's own](docs/img/r1-dashboard.png)
 
 - **No dependencies, nothing to install** beyond Node.js 22.5+ (uses the built-in `node:sqlite`).
 - **Browsers hold no credentials** — only the server talks to RUCKUS One, with a read-only API key.
@@ -27,6 +27,23 @@ Then connect your tenant: `npm start`, open <http://localhost:8080/admin>, fill 
 |---|---|
 | **[Getting started](docs/GETTING_STARTED.md)** | install, API key, connect, build screens, put it on the wall — about 15 minutes |
 | **[User guide](docs/USER_GUIDE.md)** | the viewer, editor, widgets, alerts, notifications, multi-display, views & schedules, history, reports, security, troubleshooting, reference |
+
+## Looks like RUCKUS One out of the box
+The three default screens are modelled on RUCKUS One's own **Dashboard**, **Wi-Fi (Wireless / WLAN) report** and
+**Switch (Wired) report** — same tiles, same names, so it feels familiar on a wall:
+
+| | |
+|---|---|
+| **Dashboard** | Alarms ring · Client Experience · Venues ring · Devices bars · Clients bars · "Did you know?" · Connected Clients Over Time · Top 5 SSIDs by Traffic / by Clients |
+| **Wi-Fi** | Top APs by Traffic / Client Count · Top SSIDs by Traffic / Client Count · Traffic Trend · Active SSIDs Trend · Top APs / Top SSIDs tables |
+| **Switch** | Top Switches by Traffic / PoE Usage / Errors · Traffic by Switch Model and Port Speed · Traffic Trend · Error Trend · Overview |
+
+![Wi-Fi](docs/img/r1-wifi.png)
+![Switch](docs/img/r1-switch.png)
+
+Tiles that need RUCKUS AI / analytics data (Incidents, Connection Success, Time To Connect, AP Capacity, Top Applications,
+airtime) aren't available from the public API and are left out. Everything is editable, and the old Overview / Clients /
+Infrastructure screens are still available as presets.
 
 ## What you get
 

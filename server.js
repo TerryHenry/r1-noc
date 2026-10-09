@@ -60,10 +60,11 @@ function applyThresholds(wd, p) {
 }
 const upS = (d) => d.status === 'Operational' || d.status === 'Degraded';
 function summaryOf(S) { return { aps: S.aps.length, apsUp: S.aps.filter(upS).length, sw: S.switches.length, swUp: S.switches.filter(upS).length, clients: S.clients.length || S.aps.reduce((n, a) => n + a.clients, 0), alarms: S.alarms.length }; }
+const applyTitle = (wd, p) => (wd.title && p.kind !== 'error' ? { ...p, title: wd.title } : p);
 function buildData(venue = '') {
   const S = collect.get();
   const out = {};
-  for (const wd of dash.allWidgets(layout)) out[wd.id] = applyThresholds(wd, widgets.compute(venue && !wd.venue ? { ...wd, venue } : wd, S));
+  for (const wd of dash.allWidgets(layout)) out[wd.id] = applyTitle(wd, applyThresholds(wd, widgets.compute(venue && !wd.venue ? { ...wd, venue } : wd, S)));
   return { at: S.at, serverNow: Date.now(), view: dash.scheduledView(layout), venue, source: S.source, errors: S.errors, pollSeconds: cfg.pollSeconds, alerts: rules.active(), summary: summaryOf(S), ticker: feeds.ticker(), widgets: out };
 }
 // One payload per distinct drill-down venue among the connected clients.
@@ -86,7 +87,7 @@ const venueParam = (url) => { const v = url.searchParams.get('venue') || ''; ret
 function reportHtml(rep) {
   const view = dash.viewByName(layout, rep.view); const S = collect.get();
   const screens = rep.screen === '*' ? view.screens : view.screens.filter((x) => x.name === rep.screen);
-  const data = {}; for (const sc of screens) for (const wd of sc.widgets) data[wd.id] = applyThresholds(wd, widgets.compute(wd, S));
+  const data = {}; for (const sc of screens) for (const wd of sc.widgets) data[wd.id] = applyTitle(wd, applyThresholds(wd, widgets.compute(wd, S)));
   return report.render({ title: rep.name, subtitle: `${layout.title} · ${view.name}${rep.screen === '*' ? '' : ' · ' + rep.screen}`, screens, data, source: S.source === 'demo' ? 'demo data' : 'live data' });
 }
 async function runReport(rep) {

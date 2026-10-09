@@ -65,6 +65,11 @@ const R = {
   table: (d) => '<table><thead><tr>' + d.columns.map((c) => `<th>${esc(c)}</th>`).join('') + '</tr></thead><tbody>' +
     d.rows.map((r) => `<tr class="${r.tone || ''}">${r.cells.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('') + '</tbody></table>',
 
+  // R1-style stacked bars: one row per group, coloured segments (by status/quality), legend underneath.
+  stack: (d) => { const max = Math.max(1, ...d.rows.map((r) => r.segments.reduce((n, x) => n + x.value, 0))); const seen = new Map();
+    const rows = d.rows.map((r) => { const tot = r.segments.reduce((n, x) => n + x.value, 0); r.segments.forEach((x) => seen.set(x.label, x.tone));
+      return `<div class="stk"><div class="stk-l"><span>${esc(r.label)}</span><b>${nf.format(tot)}</b></div><div class="stk-bar">${tot ? r.segments.map((x) => `<i style="width:${(x.value / max) * 100}%;background:${TONE[x.tone] || 'var(--c1)'}" title="${esc(x.label)}: ${x.value}">${x.value / max > 0.1 ? nf.format(x.value) : ''}</i>`).join('') : '<em>none</em>'}</div></div>`; }).join('');
+    return `<div class="stacks">${rows}<div class="stk-legend">${[...seen].map(([l, t]) => `<span><i style="background:${TONE[t] || 'var(--c1)'}"></i>${esc(l)}</span>`).join('')}</div></div>`; },
   message: (d) => (d.messages.length ? `<div class="msgs">${d.messages.map((m) => `<div class="msg ${esc(m.tone || 'info')}">${esc(m.text)}</div>`).join('')}</div>` : '<div class="empty" style="color:var(--faint)">No messages right now</div>'),
   weather: (d) => `<div class="wx"><div class="wx-now"><div class="wx-t">${d.now.temp}°<small>${esc(d.units)}</small></div><div class="wx-c"><b>${esc(d.now.text)}</b><span>Feels ${d.now.feels}° · wind ${d.now.wind} ${esc(d.windUnit)} · humidity ${d.now.humidity}%</span><span>${esc(d.place)}</span></div></div>` +
     `<div class="wx-days">${d.days.map((x, i) => `<div><b>${i === 0 ? 'Today' : new Date(x.date + 'T12:00').toLocaleDateString([], { weekday: 'short' })}</b><span>${x.hi}° / ${x.lo}°</span><span>${esc(x.text)}</span>${x.pop != null ? `<span>${x.pop}% rain</span>` : ''}</div>`).join('')}</div></div>`,

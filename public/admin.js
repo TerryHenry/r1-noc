@@ -82,7 +82,13 @@ document.addEventListener('click', (e) => {
   while (pl.length && !pl[pl.length - 1].length && pl.length > plN) pl.pop();
   renderPlaylists();
 });
-document.addEventListener('change', (e) => { if (e.target.id === 'pln') { plN = Math.max(1, Math.min(6, Number(e.target.value) || 1)); const pl = PL(); while (pl.length > plN) pl.pop(); renderPlaylists(); } });
+const uniqueName = (list, base) => { base = base.replace(/ copy( \d+)? copy$/, ' copy'); let n = base, k = 2; while (list.some((x) => x.name === n)) n = `${base} ${k++}`; return n; };
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'copyTo' && e.target.value !== '') {
+    const idx = Number(e.target.value); const dest = idx < 0 ? layout.screens : layout.views[idx].screens; const src = SC()[cur];
+    const scr = JSON.parse(JSON.stringify(src)); scr.name = uniqueName(dest, src.name); dest.push(scr);
+    say(`Copied "${src.name}" to ${idx < 0 ? 'Main' : '“' + layout.views[idx].name + '”'} as "${scr.name}". Save & apply to keep it.`); e.target.value = ''; return;
+  } if (e.target.id === 'pln') { plN = Math.max(1, Math.min(6, Number(e.target.value) || 1)); const pl = PL(); while (pl.length > plN) pl.pop(); renderPlaylists(); } });
 
 function render() {
   $('#title').value = layout.title; $('#rot').value = layout.rotateSeconds;
@@ -101,6 +107,8 @@ function render() {
       <label ${(s.displays || 1) > 1 ? '' : 'style="opacity:.45"'} title="Auto: widgets are cut into groups of similar size, in order. Manual: choose a display for each widget below.">Split<select id="ssplit"><option value="auto" ${s.split !== 'manual' ? 'selected' : ''}>Auto (balanced)</option><option value="manual" ${s.split === 'manual' ? 'selected' : ''}>Manual</option></select></label>
       <button data-act="design" class="primary" title="Open the visual layout designer: drag widgets to reorder or place them, drag the corner to resize">🎨 Design layout</button>
       <label class="inline" title="Tile this screen with no gaps: widgets keep their order, each row is stretched to the full width and one height. Turn off to use the exact widths/heights below."><input type="checkbox" id="autofit" ${s.auto !== false ? 'checked' : ''}> Auto-fit (no gaps)</label>
+      <button data-act="dupscreen" title="Make a copy of this screen right after it">⧉ Duplicate</button>
+      <label title="Copy this screen into another view (Main or a saved view)">Copy to<select id="copyTo"><option value="">another view…</option>${[['Main', -1], ...layout.views.map((v, i) => [v.name, i])].filter(([, i]) => i !== curView).map(([n, i]) => `<option value="${i}">${esc(n)}</option>`).join('')}</select></label>
       <button data-act="left">◀ Move</button><button data-act="right">Move ▶</button>
       <button data-act="delscreen" class="danger">Delete screen</button>
     </div>
@@ -112,6 +120,7 @@ function render() {
         <label>Width (1–12)<input data-f="w" type="number" min="1" max="12" value="${w.w}"></label>
         <label>Height (rows)<input data-f="h" type="number" min="1" max="10" value="${w.h}"></label>
         ${d.params.map((p) => `<label>${esc(p.label)}<input data-p="${p.name}" type="number" min="1" value="${w.params[p.name] ?? p.default}"></label>`).join('')}
+        <label title="Optional heading shown on the card instead of the widget's own name">Card title<input data-f="title" value="${esc(w.title || '')}" placeholder="(default)" style="width:11rem"></label>
         ${d.match ? `<label title="Only include APs/clients whose AP group name contains this text (case-insensitive) — like Data Studio's apGroupName ILIKE %text%">AP group contains<input data-f="match" value="${esc(w.match || '')}" placeholder="all" style="width:9rem"></label>` : ''}
         ${d.numeric ? thresholdsHtml(w) : ''}
         <button data-act="up" title="Move earlier">↑</button><button data-act="down" title="Move later">↓</button><button data-act="del" class="danger">Remove</button>
@@ -170,7 +179,7 @@ document.addEventListener('change', (e) => {
   if (e.target.id === 'autofit') { SC()[cur].auto = e.target.checked; return; }
   if (e.target.id === 'preset' && e.target.value !== '') {
     const pr = presets[Number(e.target.value)];
-    SC().push({ name: pr.name, widgets: pr.widgets.map((x) => ({ type: x.type, venue: '', w: x.w || (catalog.find((c) => c.type === x.type) || {}).w || 3, h: x.h || (catalog.find((c) => c.type === x.type) || {}).h || 2, match: x.match || '', params: x.params || {} })) });
+    SC().push({ name: pr.name, widgets: pr.widgets.map((x) => ({ type: x.type, venue: '', w: x.w || (catalog.find((c) => c.type === x.type) || {}).w || 3, h: x.h || (catalog.find((c) => c.type === x.type) || {}).h || 2, match: x.match || '', title: x.title || '', params: x.params || {} })) });
     cur = SC().length - 1; render(); say(`Added "${pr.name}" — click Save & apply to keep it.`); return;
   } if (e.target.id === 'unusedOnly') { unusedOnly = e.target.checked; render(); } });
 
@@ -185,6 +194,7 @@ document.addEventListener('click', (e) => {
   else if (t.dataset.tab) { cur = Number(t.dataset.tab); showPicker = false; }
   else if (t.dataset.add) { const d = def(t.dataset.add); s.widgets.push({ type: d.type, venue: '', w: d.w, h: d.h, params: {} }); }
   else if (t.dataset.act === 'addscreen') { SC().push({ name: `Screen ${SC().length + 1}`, widgets: [] }); cur = SC().length - 1; }
+  else if (t.dataset.act === 'dupscreen') { const scr = JSON.parse(JSON.stringify(s)); scr.name = uniqueName(SC(), `${s.name.replace(/ copy( \d+)?$/, '')} copy`); SC().splice(cur + 1, 0, scr); cur += 1; say(`Duplicated as "${scr.name}" — rename it, then Save & apply.`); }
   else if (t.dataset.act === 'delscreen') { if (SC().length > 1 && confirm(`Delete screen "${s.name}"?`)) { SC().splice(cur, 1); cur = Math.max(0, cur - 1); } }
   else if (t.dataset.act === 'left' && cur > 0) { [SC()[cur - 1], SC()[cur]] = [SC()[cur], SC()[cur - 1]]; cur--; }
   else if (t.dataset.act === 'right' && cur < SC().length - 1) { [SC()[cur + 1], SC()[cur]] = [SC()[cur], SC()[cur + 1]]; cur++; }
@@ -204,7 +214,7 @@ document.addEventListener('input', (e) => {
   if (el.id === 'title') { layout.title = el.value; return; }
   if (el.id === 'rot') { layout.rotateSeconds = Number(el.value); return; }
   const row = el.closest('.wrow'); if (!row) return; const w = s.widgets[Number(row.dataset.i)];
-  if (el.dataset.f) w[el.dataset.f] = (el.dataset.f === 'venue' || el.dataset.f === 'match') ? el.value : Number(el.value);   // venue is a string; w/h/display are numbers
+  if (el.dataset.f) w[el.dataset.f] = (el.dataset.f === 'venue' || el.dataset.f === 'match' || el.dataset.f === 'title') ? el.value : Number(el.value);   // venue is a string; w/h/display are numbers
   if (el.dataset.p) w.params[el.dataset.p] = Number(el.value);
 });
 $('#save').addEventListener('click', async () => {

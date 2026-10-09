@@ -125,6 +125,13 @@ From top to bottom:
 
 Nothing you change is live until you press the relevant **Save** button (each panel has its own).
 
+### Duplicating, copying and renaming screens
+
+Every screen has **⧉ Duplicate** (a copy right after it, named "… copy") and **Copy to** (pick Main or any saved view). Rename
+a screen with the **Screen name** box. Copies are independent — their widgets and layout can be changed freely — and names
+are kept unique within a view (playlists refer to screens by name). Every widget also has an optional **Card title** to
+show instead of the widget's own name.
+
 ### Views, screens and widgets
 
 - A **view** is a named set of screens. **Main** always exists.
@@ -149,6 +156,26 @@ Nothing you change is live until you press the relevant **Save** button (each pa
 ---
 
 ## Widgets
+
+### The default screens (RUCKUS One look-alikes)
+
+The three built-in screens are modelled on RUCKUS One's own pages:
+
+| Default screen | Modelled on | Tiles |
+|---|---|---|
+| **Dashboard** | the R1 Dashboard | **Alarms** (ring by severity) · **Client Experience** · **Venues** (ring by status) · **Devices** (bars by status) · **Clients** · **Did you know?** · Venues table · Connected Clients Over Time · Top 5 SSIDs by Traffic / by Clients |
+| **Wi-Fi** | the Wireless and WLAN reports | Top APs by Traffic / by Client Count · Top SSIDs by Traffic / by Client Count · Traffic Trend (downlink / uplink) · Active SSIDs Trend · Top APs and Top SSIDs tables |
+| **Switch** | the Wired report | Top Switches by Traffic / PoE Usage / Errors · Traffic by Switch Model and Port Speed · Traffic Trend · Error Trend · Overview |
+
+![RUCKUS One style Wi-Fi screen](img/r1-wifi.png)
+![RUCKUS One style Switch screen](img/r1-switch.png)
+
+**What's different from R1:** the numbers come from the public API, so tiles that depend on RUCKUS AI / analytics data are
+omitted — *Incidents*, *Connection Success*, *Time To Connect*, *AP Capacity*, *Top Applications* and airtime. The map is
+replaced by a Venues table. R1's "traffic over a period" is replaced by **measured throughput**: client throughput comes from
+client byte counters, and switch traffic from switch-port counters, each differenced between polls (so switch traffic updates
+every few minutes, when ports are refreshed, and the *Traffic Trend* charts fill in over time). The same screens are in the
+**+ Preset screen…** menu as *RUCKUS One Dashboard / Wi-Fi / Switch*, so you can add them to an existing layout.
 
 There are **900+ widgets**, found in the picker under these groups. Use the search box — it matches title, group and
 ID, so `dpsk`, `vlan`, `poe`, `ssid`, `guest`, `yesterday` all work. The tag on each button shows whether you already

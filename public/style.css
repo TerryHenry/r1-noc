@@ -149,3 +149,9 @@ body.sign #ticker { flex: 1; height: auto; font-size: 8vh; border: 0; background
 body.sign #ticker.off { display: flex; }
 body.sign #ticker .track { gap: 6vh; }
 body.sign #ticker .seg::before { margin-right: 3vh; }
+
+.stacks { display: flex; flex-direction: column; justify-content: center; gap: 1rem; height: 100%; }
+.stk-l { display: flex; justify-content: space-between; font-size: .9rem; margin-bottom: .25rem; } .stk-l b { font-variant-numeric: tabular-nums; }
+.stk-bar { display: flex; height: 1.6rem; background: var(--panel-2); border-radius: .35rem; overflow: hidden; }
+.stk-bar i { display: grid; place-items: center; color: #fff; font-style: normal; font-size: .8rem; font-weight: 650; min-width: 2px; } .stk-bar em { color: var(--faint); font-size: .8rem; padding: .25rem .6rem; }
+.stk-legend { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: .8rem; color: var(--muted); } .stk-legend i { display: inline-block; width: .65rem; height: .65rem; border-radius: 2px; margin-right: .35rem; }
