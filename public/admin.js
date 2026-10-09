@@ -6,13 +6,13 @@ const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 $('#view').href = api('/'); $('#launch').href = api('/launch.html');
 
-let layout, catalog = [], presets = [], venues = [], cur = 0, curView = -1, showPicker = false, unusedOnly = false;
+let layout, catalog = [], presets = [], venues = [], customers = [], cur = 0, curView = -1, showPicker = false, unusedOnly = false;
 const SC = () => (curView < 0 ? layout.screens : layout.views[curView].screens);   // screens of the view being edited (-1 = Main)
 const def = (t) => catalog.find((c) => c.type === t);
 
 async function load() {
   const [c, k] = await Promise.all([fetch(api('/api/config')).then((r) => r.json()), fetch(api('/api/catalog')).then((r) => r.json())]);
-  layout = c.layout; venues = c.venues || []; catalog = k.widgets; presets = k.presets || [];
+  layout = c.layout; venues = c.venues || []; customers = c.customers || []; catalog = k.widgets; presets = k.presets || [];
   if (!c.canAdmin) say('Read-only: editing requires localhost or ?key=<NOC_ADMIN_KEY>', 'bad');
   render();
   if (typeof renderTicker === 'function') renderTicker();   // the number of displays is known now
@@ -99,7 +99,8 @@ function render() {
   if (typeof renderDesigner === 'function') setTimeout(renderDesigner, 0);
   $('#tabs').innerHTML = SC().map((s, i) => `<button data-tab="${i}" class="${i === cur ? 'on' : ''}">${esc(s.name)}</button>`).join('') + '<button data-act="addscreen">+ Screen</button>' + (presets.length ? `<select id="preset"><option value="">+ Preset screen…</option>${presets.map((p, i) => `<option value="${i}">${esc(p.name)}</option>`).join('')}</select>` : '');
   const s = SC()[cur];
-  const venueOpts = (sel) => `<option value="">All venues</option>` + venues.map((v) => `<option value="${esc(v.id)}" ${v.id === sel ? 'selected' : ''}>${esc(v.name)}</option>`).join('');
+  const venueOpts = (sel) => `<option value="">All venues</option>` + venues.map((v) => `<option value="${esc(v.id)}" ${v.id === sel ? 'selected' : ''}>${esc(v.customer ? `${v.customer} / ${v.name}` : v.name)}</option>`).join('');
+  const customerOpts = (sel) => `<option value="">All customers</option>` + customers.map((c) => `<option value="${esc(c.id)}" ${c.id === sel ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
   $('#screen').innerHTML = `
     <div style="display:flex;gap:.6rem;align-items:flex-end;margin-bottom:.8rem;flex-wrap:wrap">
       <label>Screen name<input id="sname" value="${esc(s.name)}" maxlength="40"></label>
@@ -115,6 +116,7 @@ function render() {
     ${s.widgets.map((w, i) => { const d = def(w.type) || { title: w.type, params: [] }; return `
       <div class="wrow" data-i="${i}">
         <div class="ttl">${esc(d.title)}<small>${esc(w.type)}</small></div>
+        ${customers.length ? `<label>Customer<select data-f="customer">${customerOpts(w.customer)}</select></label>` : ''}
         <label>Venue<select data-f="venue">${venueOpts(w.venue)}</select></label>
         ${(s.displays || 1) > 1 && s.split === 'manual' ? `<label>Display<select data-f="display">${Array.from({ length: s.displays }, (_, k) => `<option value="${k + 1}" ${(w.display || 1) === k + 1 ? 'selected' : ''}>Display ${k + 1}</option>`).join('')}</select></label>` : ''}
         <label>Width (1–12)<input data-f="w" type="number" min="1" max="12" value="${w.w}"></label>
@@ -214,7 +216,7 @@ document.addEventListener('input', (e) => {
   if (el.id === 'title') { layout.title = el.value; return; }
   if (el.id === 'rot') { layout.rotateSeconds = Number(el.value); return; }
   const row = el.closest('.wrow'); if (!row) return; const w = s.widgets[Number(row.dataset.i)];
-  if (el.dataset.f) w[el.dataset.f] = (el.dataset.f === 'venue' || el.dataset.f === 'match' || el.dataset.f === 'title') ? el.value : Number(el.value);   // venue is a string; w/h/display are numbers
+  if (el.dataset.f) w[el.dataset.f] = (el.dataset.f === 'venue' || el.dataset.f === 'customer' || el.dataset.f === 'match' || el.dataset.f === 'title') ? el.value : Number(el.value);   // venue is a string; w/h/display are numbers
   if (el.dataset.p) w.params[el.dataset.p] = Number(el.value);
 });
 $('#save').addEventListener('click', async () => {

@@ -61,11 +61,13 @@ function applyThresholds(wd, p) {
 const upS = (d) => d.status === 'Operational' || d.status === 'Degraded';
 function summaryOf(S) { return { aps: S.aps.length, apsUp: S.aps.filter(upS).length, sw: S.switches.length, swUp: S.switches.filter(upS).length, clients: S.clients.length || S.aps.reduce((n, a) => n + a.clients, 0), alarms: S.alarms.length }; }
 const applyTitle = (wd, p) => (wd.title && p.kind !== 'error' ? { ...p, title: wd.title } : p);
+// Viewer drill-down: ?venue=<id> pins widgets without their own venue; ?customer=<id> (or venue=c:<id>) pins them to a customer (MSP mode).
+const scoped = (wd, venue) => (!venue || wd.venue || wd.customer ? wd : venue.startsWith('c:') ? { ...wd, customer: venue.slice(2) } : { ...wd, venue });
 function buildData(venue = '') {
   const S = collect.get();
   const out = {};
-  for (const wd of dash.allWidgets(layout)) out[wd.id] = applyTitle(wd, applyThresholds(wd, widgets.compute(venue && !wd.venue ? { ...wd, venue } : wd, S)));
-  return { at: S.at, serverNow: Date.now(), view: dash.scheduledView(layout), venue, source: S.source, errors: S.errors, pollSeconds: cfg.pollSeconds, alerts: rules.active(), summary: summaryOf(S), ticker: feeds.ticker(), widgets: out };
+  for (const wd of dash.allWidgets(layout)) out[wd.id] = applyTitle(wd, applyThresholds(wd, widgets.compute(scoped(wd, venue), S)));
+  return { at: S.at, serverNow: Date.now(), view: dash.scheduledView(layout), venue, source: S.source, errors: S.errors, pollSeconds: cfg.pollSeconds, alerts: rules.active(), summary: summaryOf(venue.startsWith('c:') ? widgets.customerView(S, venue.slice(2)) : S), ticker: feeds.ticker(), widgets: out };
 }
 // One payload per distinct drill-down venue among the connected clients.
 function broadcastData() {
@@ -81,7 +83,10 @@ function broadcast(event, data) {
 }
 
 // Drill-down venue from ?venue= — must be a real venue id.
-const venueParam = (url) => { const v = url.searchParams.get('venue') || ''; return collect.get().venues.some((x) => x.id === v) ? v : ''; };
+const venueParam = (url) => {
+  const S = collect.get(); const cu = url.searchParams.get('customer') || ''; if (cu && (S.customers || []).some((c) => c.id === cu)) return `c:${cu}`;
+  const v = url.searchParams.get('venue') || ''; return v.startsWith('c:') ? ((S.customers || []).some((c) => `c:${c.id}` === v) ? v : '') : S.venues.some((x) => x.id === v) ? v : '';
+};
 
 // ---- reports ----
 function reportHtml(rep) {
@@ -123,7 +128,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (p.startsWith('/api/')) {
       if (!canView(req, url)) return json(res, 401, { error: 'Missing or wrong ?key=' });
-      if (p === '/api/config' && req.method === 'GET') return json(res, 200, { layout, control, view: dash.scheduledView(layout), serverNow: Date.now(), venues: collect.get().venues, canAdmin: canAdmin(req, url) });
+      if (p === '/api/config' && req.method === 'GET') return json(res, 200, { layout, control, view: dash.scheduledView(layout), serverNow: Date.now(), venues: collect.get().venues, customers: (collect.get().customers || []).map((c) => ({ id: c.id, name: c.name })), canAdmin: canAdmin(req, url) });
       if (p === '/api/config' && req.method === 'PUT') {
         if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires localhost or ?key=<NOC_ADMIN_KEY>' });
         try { layout = dash.save(await readBody(req)); refreshNeeds(); reanchorControl(); } catch (e) { return json(res, 400, { error: e.message }); }
@@ -140,6 +145,8 @@ const server = http.createServer(async (req, res) => {
         }
         if (p === '/api/settings/test' && req.method === 'POST') {
           if (cfg.demo) return json(res, 200, { ok: false, error: 'Server is running in demo mode (NOC_DEMO=1) — restart without it to use live data.' });
+          const cid = url.searchParams.get('customer');
+          if (cid) { const c = (cfg.customers || []).find((x) => x.id === cid); if (!c) return json(res, 200, { ok: false, error: 'Unknown customer — save the list first' }); try { return json(res, 200, { ok: true, ...(await r1.createClient(c).test()) }); } catch (e) { return json(res, 200, { ok: false, error: e.message }); } }
           try { return json(res, 200, { ok: true, ...(await r1.test()) }); } catch (e) { return json(res, 200, { ok: false, error: e.message }); }
         }
       }

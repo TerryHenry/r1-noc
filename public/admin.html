@@ -107,6 +107,16 @@
     </div>
   <pre id="diag" style="display:none;max-height:22rem;overflow:auto;background:var(--panel-2);border:1px solid var(--line);border-radius:.4rem;padding:.6rem;margin-top:.8rem;font-size:.75rem"></pre>
   </details>
+  <details class="panel" id="mspPanel">
+    <summary style="cursor:pointer;font-weight:600">Customers (MSP) <span id="mspState" style="font-weight:400;color:var(--muted);margin-left:.6rem"></span></summary>
+    <p style="color:var(--muted);margin:.6rem 0">Managing several RUCKUS One tenants? Add one API application per customer (R1 API tokens are per tenant) and the wall shows them all, with a <b>Customer</b> choice on every widget. While this list is empty the single connection above is used. Secrets are stored on the server and never sent back.</p>
+    <div id="mspRows"></div>
+    <div style="display:flex;gap:.6rem;align-items:center;margin-top:.8rem">
+      <button id="mspAdd">+ Add customer</button>
+      <button class="primary" id="mspSave">Save customers</button>
+      <span id="mspMsg"></span>
+    </div>
+  </details>
   <details class="panel" id="alertsPanel">
     <summary style="cursor:pointer;font-weight:600">Alerts <span style="font-weight:400;color:var(--muted);margin-left:.6rem">rules that take over the screens and notify you</span></summary>
     <h4 style="margin:.8rem 0 .3rem;color:var(--muted)">Active right now</h4><div id="activeAlerts"></div>
@@ -150,5 +160,6 @@
 <script src="/admin-designer.js"></script>
 <script src="/admin-alerts.js"></script>
 <script src="/admin-feeds.js"></script>
+<script src="/admin-msp.js"></script>
 </body>
 </html>

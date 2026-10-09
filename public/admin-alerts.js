@@ -17,6 +17,7 @@ function renderRules() {
       <label>Hold for (sec)<input data-rf="forSeconds" type="number" min="0" value="${r.forSeconds}" style="width:5.5rem" title="The condition must stay true this long before the alert fires"></label>
       <label>Severity<select data-rf="severity">${opts([['warn', 'Warning'], ['crit', 'Critical']], r.severity)}</select></label>
       <label class="inline" ${mt.perVenue ? '' : 'style="opacity:.4"'} title="Evaluate separately for every venue"><input type="checkbox" data-rf="perVenue" ${r.perVenue && mt.perVenue ? 'checked' : ''} ${mt.perVenue ? '' : 'disabled'}> Per venue</label>
+      ${typeof customers !== 'undefined' && customers.length ? `<label class="inline" ${mt.perVenue ? '' : 'style="opacity:.4"'} title="MSP: evaluate separately for every customer"><input type="checkbox" data-rf="perCustomer" ${r.perCustomer && mt.perVenue ? 'checked' : ''} ${mt.perVenue ? '' : 'disabled'}> Per customer</label>` : ''}
       <label class="inline" title="Cover every display with a full-screen alert until acknowledged"><input type="checkbox" data-rf="takeover" ${r.takeover ? 'checked' : ''}> Take over screens</label>
       <label class="inline"><input type="checkbox" data-rf="notify" ${r.notify ? 'checked' : ''}> Notify</label>
       <label>Remind every (min)<input data-rf="repeatMinutes" type="number" min="0" value="${r.repeatMinutes}" style="width:5rem" title="0 = only once"></label>

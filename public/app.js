@@ -330,13 +330,13 @@ async function boot() {
   const r = await fetch(api('/api/config'));
   if (!r.ok) { $('#stage').innerHTML = `<div class="err">${r.status === 401 ? 'Unauthorized — add ?key=…' : 'Failed to load config'}</div>`; return; }
   const c = await r.json(); layout = c.layout; control = c.control; clockOffset = (c.serverNow || Date.now()) - Date.now();
-  venueList = c.venues || []; serverView = c.view || 'Main';
+  venueList = (c.venues || []).concat((c.customers || []).map((x) => ({ id: 'c:' + x.id, name: x.name }))); serverView = c.view || 'Main';
   if (SYNC) screenIdx = syncIdx();
   if (pinned) { const i = scr().findIndex((s) => s.name.toLowerCase() === pinned.toLowerCase()); if (i >= 0) screenIdx = i; }
   if (c.canAdmin) $('#edit').style.display = ''; $('#edit').href = api('/admin');
   paintScreen(); startRotation();
 
-  venueList = c.venues || []; serverView = c.view || 'Main'; paintViews();
+  venueList = (c.venues || []).concat((c.customers || []).map((x) => ({ id: 'c:' + x.id, name: x.name }))); serverView = c.view || 'Main'; paintViews();
   openStream();
 }
 let es = null;

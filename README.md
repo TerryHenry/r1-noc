@@ -8,6 +8,7 @@ editor, get full-screen alerts and Slack/Teams/email notifications, and receive 
 
 - **No dependencies, nothing to install** beyond Node.js 22.5+ (uses the built-in `node:sqlite`).
 - **Browsers hold no credentials** — only the server talks to RUCKUS One, with a read-only API key.
+- **MSP mode** — one API application per customer tenant, a Customer choice on every widget, customer-named alerts, `?customer=` walls (try `npm run demo:msp`)
 - **1,000+ widgets** (clients, APs, switches, ports, alarms, DPSK, guests, VLANs, Wi-Fi calling, throughput, RF quality gauges, history…), searchable,
   auto-tiled to fill any screen size.
 

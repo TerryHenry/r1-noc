@@ -64,6 +64,9 @@ Click **Save connection**, then **Test connection**. You should see *"Connected 
 
 The secret is stored on the server in `data/settings.json` (owner-readable only) and is never sent back to the browser.
 
+> **Managing several customers (MSP)?** API keys are per tenant. Skip the single connection and add each customer under
+> **Customers (MSP)** in the editor — see [MSP mode](USER_GUIDE.md#msp-mode-multiple-customers). `npm run demo:msp` previews it.
+
 ## 5. Check the data looks right
 
 Open <http://localhost:8080>. Within a minute the chip in the top bar should read **live**.

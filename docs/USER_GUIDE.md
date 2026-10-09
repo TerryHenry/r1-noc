@@ -15,7 +15,7 @@ shows the result. You design the screens in a browser-based editor.
 7. [Views and schedules](#views-and-schedules)
 8. [Thresholds](#thresholds)
 9. [Alerts and notifications](#alerts-and-notifications) · [Ticker, messages and feeds](#ticker-messages-and-feeds)
-10. [Venue drill-down](#venue-drill-down)
+10. [Venue drill-down](#venue-drill-down) · [MSP mode (multiple customers)](#msp-mode-multiple-customers)
 11. [History](#history)
 12. [Reports](#reports)
 13. [Configuration](#configuration)
@@ -520,6 +520,40 @@ that browser and clears itself after 90 seconds, so a wall never stays stuck on 
 a venue (DPSK, guests, identity groups) are unaffected.
 
 ---
+
+## MSP mode (multiple customers)
+
+RUCKUS One API keys belong to **one tenant**, so a managed-service NOC uses one API application per customer tenant. In the
+editor open **Customers (MSP)**, press **+ Add customer**, and enter a name, that customer's Tenant ID, Client ID, Client
+secret and region. **Save customers**, then **Test** on each row. (Secrets are write-only, like the main connection.)
+While the list is empty the single connection is used, exactly as before; once it has entries, *only* the customers are polled.
+
+What changes:
+
+- **Every row of data carries its customer** — venues, APs, switches, clients, alarms, ports, DPSK, guests… — and the
+  poller keeps separate state per customer (token, throughput baselines, caches). Up to three customers are polled at a time.
+- **A customer that fails doesn't take the wall down.** Its row shows *Unreachable* (with R1's reason) and the others carry
+  on. The red "R1 API unreachable" banner appears only when *every* customer fails; otherwise the status chip counts source issues.
+- **Customer choice on every widget** (next to *Venue*): pin a tile to one customer and it shows only that customer's data,
+  with the customer's name in the title. Venue pickers read *Customer / Venue*. Trend widgets pinned to a customer use that
+  customer's own history (recorded from the day you enable MSP mode).
+- **Customers (MSP) widgets**: *Customers overview* (table: status, venues, APs and switches online, clients, critical/major
+  alarms, connection success, open incidents), *Customer health* (list), clients / offline APs / alarms / critical alarms /
+  connection success by customer, *APs by customer*, KPIs (customers online, customers with issues, critical alarms) and
+  *Alarms across customers*. Preset: **MSP overview**.
+- **Whole wall for one customer:** add `?customer=<id>` to the viewer URL (the id is shown in `/api/config`; it is the customer
+  name in lower-case with dashes, e.g. `acme-corp`). Clicking a customer name in a table drills down the same way.
+- **Alerts name the customer.** In MSP mode a network-wide rule is evaluated per customer, so an alert reads
+  *"Critical alarm raised — Globex"*; *Per venue* alerts read *Customer / Venue*. There is also a *Per customer* tick and a
+  *Customers unreachable (MSP)* metric.
+- **Client experience analytics** are fetched for each customer; the unfiltered numbers add them up (success counts,
+  trends, incidents, top lists) and a customer-pinned widget shows that customer alone.
+
+Try it without an MSP tenant: `npm run demo:msp` simulates three customers (one deliberately unreachable).
+
+> **Cost.** Each customer is a full poll (venues, APs, switches, clients, alarms, plus any heavier sources your widgets need),
+> so a long customer list lengthens each cycle and uses more of your R1 API allowance. Raise *Poll every (sec)* for large lists.
+> Tenant-level data that spans customers (R1's MSP inventory/licensing APIs) is not used.
 
 ## History
 
