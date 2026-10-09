@@ -402,6 +402,12 @@ Each feed has its own refresh interval and a **Test** button that fetches it rig
 test also shows which place it resolved to).
 
 - **Text size** (Small / Medium / **Large** / Extra large) and **Scroll speed** are settings; the screen re-fits around the ticker.
+- **All displays or different per display.** Every message and feed has **Show on: all displays** (the default) or a
+  tick-list of specific displays, so a lobby TV can show the news and weather while the NOC wall shows an internal note.
+  Under **Per-display settings** each display can also override the text size, scroll speed, whether messages and feeds
+  show at all, and whether **alerts** are shown. *Hide alerts* removes them from that display's ticker **and** its
+  full-screen takeover — meant for public-facing screens. (Turning messages & feeds *Off* while leaving alerts on gives an
+  alerts-only ticker; set both to hide the strip entirely.) A viewer opened without `?display=` counts as display 1.
 - **Full-screen sign:** `/?mode=ticker` turns a display into a giant scrolling-text board (alerts, messages, feeds) — handy for a lobby TV.
 - **Widgets:** *Message board*, *News headlines*, *Weather* and *Stock / market quotes* cards are in the picker under
   **Ticker & feeds**, so the same content can sit on a normal screen too.

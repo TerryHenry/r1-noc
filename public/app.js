@@ -252,6 +252,12 @@ setInterval(syncTick, 400);
 
 // ---------- alerts: takeover, ticker, burn-in guard ----------
 let alerts = [], takeoverOn = false;
+// This display's ticker settings: the global ones, overridden by any per-display setting. A plain viewer counts as display 1.
+const myDisplay = () => DISPLAY || 1;
+function tickerFor(t) {
+  const base = t || { enabled: true, speed: 70, size: 'large', showStatus: true, perDisplay: {}, segments: [] }; const ov = (base.perDisplay || {})[myDisplay()] || {};
+  return { ...base, ...ov, alerts: ov.alerts !== false, segments: (base.segments || []).filter((g) => !g.displays || !g.displays.length || g.displays.includes(myDisplay())) };
+}
 const ago = (t) => { const m = Math.max(0, Math.round((Date.now() + clockOffset - t) / 60000)); return m < 1 ? 'just now' : m < 90 ? `${m} min` : `${Math.round(m / 60)} h`; };
 function paintAlerts(summary) {
   const tk = alerts.filter((a) => a.takeover && !a.acked);
@@ -267,7 +273,7 @@ function paintAlerts(summary) {
     box.dataset.keys = JSON.stringify(tk.map((a) => a.key));
   }
   // ticker: live alerts first, then custom messages and feed items; a one-line status when there is nothing else
-  const tkr = $('#ticker'); const track = tkr.querySelector('.track'); const cfgT = (data && data.ticker) || { enabled: true, speed: 70, showStatus: true, segments: [] };
+  const tkr = $('#ticker'); const track = tkr.querySelector('.track'); const cfgT = tickerFor(data && data.ticker);
   const live = alerts.filter((a) => !a.acked || a.severity === 'crit');
   const parts = live.map((a) => `<span class="${a.severity}">${a.severity === 'crit' ? '●' : '▲'} ${esc(a.message)}${a.acked ? ' (acknowledged)' : ''}</span>`);
   if (cfgT.enabled) for (const g of cfgT.segments) parts.push(`<span class="seg ${esc(g.tone)} k-${esc(g.kind)}">${esc(g.text)}</span>`);
@@ -335,7 +341,7 @@ function openStream() {
   es.addEventListener('data', (e) => {
     data = JSON.parse(e.data); if (data.serverNow) clockOffset = data.serverNow - Date.now(); lastDataAt = Date.now();
     if (data.view && data.view !== serverView) { serverView = data.view; if (!localView) { screenIdx = SYNC ? syncIdx() : 0; paintViews(); startRotation(); } }
-    alerts = data.alerts || []; paintScreen(false); updateStatus(); paintAlerts(data.summary);
+    alerts = tickerFor(data.ticker).alerts ? (data.alerts || []) : []; paintScreen(false); updateStatus(); paintAlerts(data.summary);
   });
   es.addEventListener('control', (e) => { const j = JSON.parse(e.data); control = j.control; clockOffset = j.serverNow - Date.now(); syncTick(); });
   es.addEventListener('config', (e) => { const j = JSON.parse(e.data); layout = j.layout; if (j.control) { control = j.control; clockOffset = j.serverNow - Date.now(); } screenIdx = SYNC ? syncIdx() : Math.min(screenIdx, scr().length - 1); paintViews(); paintScreen(); startRotation(); });

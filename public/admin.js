@@ -15,6 +15,7 @@ async function load() {
   layout = c.layout; venues = c.venues || []; catalog = k.widgets; presets = k.presets || [];
   if (!c.canAdmin) say('Read-only: editing requires localhost or ?key=<NOC_ADMIN_KEY>', 'bad');
   render();
+  if (typeof renderTicker === 'function') renderTicker();   // the number of displays is known now
 }
 function say(t, cls = 'ok') { const m = $('#msg'); m.textContent = t; m.className = cls; }
 
