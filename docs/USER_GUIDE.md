@@ -280,6 +280,12 @@ less than 3 hours ago. Severity names (Critical ≥ 0.8, High ≥ 0.6, Medium �
 visible here as R1's "high airtime" incidents — the *Airtime incidents* tile shows how many R1 raised (zero simply means R1
 raised none, not that airtime is fine). Impacted-AP/client detail is not available (R1 errors on it).
 
+**Per venue:** set a widget's **Venue** and these tiles switch to that venue — *Connection success*, *Time to connect*, the
+per-stage success tiles, and all the incident tiles/lists. (Connection *attempts/failed counts*, the stage table and the
+top-N lists stay network-wide; a venue-pinned counts tile shows "network-wide only".) **Connection experience by venue** (table)
+and **Connection success by venue** (bars) compare every venue at once. Venues are matched to R1's analytics by **name**, so a
+venue whose name differs between the two shows "no data for this venue". Per-venue figures are success *rates* only.
+
 > **Experimental.** This service is not part of R1's published API. It may change or stop accepting API keys without notice.
 > If it fails, only these widgets say so (the data-source chip turns amber and shows R1's error code); everything else keeps
 > working. The figures are **network-wide** (no per-venue split yet), and R1's own *AP Capacity*, service-validation and call-quality (MOS) results were refused for API keys, so they are not included.
