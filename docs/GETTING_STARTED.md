@@ -77,9 +77,9 @@ confirmed on every tenant; Diagnostics is how they get fixed in minutes.)
 
 Go to **/admin**. The three starter screens — **Dashboard**, **Wi-Fi** and **Switch** — are modelled on RUCKUS One's own Dashboard, Wireless/WLAN report and Wired report, so they're a familiar starting point.
 
-- **+ Add widget** opens a searchable catalog of 1,000 widgets. Try searching `dpsk`, `vlan`, `poe`, `guest`, `ssid`.
+- **+ Add widget** opens a searchable catalog of 1,000+ widgets. Try searching `dpsk`, `vlan`, `poe`, `guest`, `ssid`.
 - **Duplicate** or **Copy to** (screen header) makes a copy of any screen, here or in another view; rename it with the *Screen name* box.
-- **+ Preset screen…** adds ready-made screens (RUCKUS One Dashboard / Wi-Fi / Switch, Overview (classic), Switching, Wi-Fi Calling, AP load (airtime stand-in), Wireless performance, Student experience, RF coverage, Throughput, Client mix).
+- **+ Preset screen…** adds ready-made screens (RUCKUS One Dashboard / Wi-Fi / Switch, Overview (classic), Switching, Wi-Fi Calling, AP load (airtime stand-in), Connection health / Top talkers and failures / Incidents (experimental, from R1's analytics service), Wireless performance, Student experience, RF coverage, Throughput, Client mix).
 - Leave **Auto-fit (no gaps)** ticked and the screen tiles itself to fill the display.
 - Click **Save & apply** — every open display updates immediately.
 

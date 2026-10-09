@@ -8,7 +8,7 @@ editor, get full-screen alerts and Slack/Teams/email notifications, and receive 
 
 - **No dependencies, nothing to install** beyond Node.js 22.5+ (uses the built-in `node:sqlite`).
 - **Browsers hold no credentials** — only the server talks to RUCKUS One, with a read-only API key.
-- **1,000 widgets** (clients, APs, switches, ports, alarms, DPSK, guests, VLANs, Wi-Fi calling, throughput, RF quality gauges, history…), searchable,
+- **1,000+ widgets** (clients, APs, switches, ports, alarms, DPSK, guests, VLANs, Wi-Fi calling, throughput, RF quality gauges, history…), searchable,
   auto-tiled to fill any screen size.
 
 ## Quick start
@@ -86,7 +86,7 @@ Copy `.env.example` to `.env`, or use the editor. **`data/` and `.env` hold secr
 
 ```
 server.js       HTTP + live streaming, shared rotation clock, schedulers
-lib/            collect · normalize · widgets · widgetgen · rules · notify · report · history · dashboard · demo
+lib/            collect · analytics · normalize · widgets · widgetgen · rules · notify · report · history · dashboard · demo
 public/         viewer, editor, multi-display launcher
 docs/           getting started, user guide, screenshots
 ```

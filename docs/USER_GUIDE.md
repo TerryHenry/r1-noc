@@ -204,7 +204,8 @@ columns.
 
 ### Which data does each widget need?
 
-Widgets that need heavier data (ports, DPSK, guests, networks, VLAN pools, identity groups, Wi-Fi calling profiles)
+Widgets that need heavier data (ports, DPSK, guests, networks, VLAN pools, identity groups, Wi-Fi calling profiles, and
+R1's analytics service for the *Client experience* widgets)
 automatically switch that data source on while they're on a screen. The first poll after you add one can take a minute
 to fill in. If a source fails, only the widgets that need it say so; the rest keep working.
 
