@@ -170,8 +170,8 @@ The three built-in screens are modelled on RUCKUS One's own pages:
 ![RUCKUS One style Wi-Fi screen](img/r1-wifi.png)
 ![RUCKUS One style Switch screen](img/r1-switch.png)
 
-**What's different from R1:** the numbers come from R1's APIs, so a few tiles are omitted — *Incidents*, *AP Capacity*,
-*Top Applications* and airtime. *Connection Success* and *Time To Connect* are included via R1's analytics service (experimental, see below). The map is
+**What's different from R1:** the numbers come from R1's APIs, so a few tiles are omitted — *AP Capacity* and airtime.
+*Connection Success*, *Time To Connect*, *Incidents* and *Top Applications* are included via R1's analytics service (experimental, see below). The map is
 replaced by a Venues table. R1's "traffic over a period" is replaced by **measured throughput**: client throughput comes from
 client byte counters, and switch traffic from switch-port counters, each differenced between polls (so switch traffic updates
 every few minutes, when ports are refreshed, and the *Traffic Trend* charts fill in over time). The same screens are in the
@@ -273,9 +273,16 @@ though Data Studio doesn't. The server uses it to fetch, every 5 minutes and onl
 stage, and a "who and where" table with the worst offender per stage. Preset: **Top talkers and failures (experimental)**.
 The failure lists come back empty when there were no failures at that stage.
 
+**Incidents** (R1's own Incidents page, last 7 days): open-incident counts, a table (severity, what, where, when, duration,
+ongoing/cleared), and breakdowns by category, severity and type. An incident counts as *ongoing* if R1's window for it ended
+less than 3 hours ago. Severity names (Critical ≥ 0.8, High ≥ 0.6, Medium ≥ 0.3, Low) approximate R1's P1–P4 bands. Preset:
+**Incidents (experimental)**; alert rules can use *Open incidents* and *Open high/critical incidents*. **Airtime** is only
+visible here as R1's "high airtime" incidents — the *Airtime incidents* tile shows how many R1 raised (zero simply means R1
+raised none, not that airtime is fine). Impacted-AP/client detail is not available (R1 errors on it).
+
 > **Experimental.** This service is not part of R1's published API. It may change or stop accepting API keys without notice.
 > If it fails, only these widgets say so (the data-source chip turns amber and shows R1's error code); everything else keeps
-> working. The figures are **network-wide** (no per-venue split yet), and R1's own *Incidents*, *AP Capacity*, service-validation and call-quality (MOS) results were refused for API keys, so they are not included.
+> working. The figures are **network-wide** (no per-venue split yet), and R1's own *AP Capacity*, service-validation and call-quality (MOS) results were refused for API keys, so they are not included.
 
 #### AP load — the closest stand-in for airtime
 
