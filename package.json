@@ -1,7 +1,7 @@
 {
   "name": "r1-noc",
   "version": "0.1.0",
-  "description": "Server-side NOC display for RUCKUS One — polls the public R1 API, serves a customizable wall dashboard to any browser.",
+  "description": "R1 NOC Wall — server-side NOC display for RUCKUS One — polls the public R1 API, serves a customizable wall dashboard to any browser.",
   "private": true,
   "engines": { "node": ">=22.5" },
   "scripts": { "start": "node server.js", "demo": "NOC_DEMO=1 node server.js", "demo:msp": "NOC_DEMO=1 NOC_DEMO_MSP=1 node server.js" }

@@ -251,6 +251,6 @@ cycle();
 schedule();
 
 server.listen(cfg.port, () => {
-  console.log(`R1 NOC on http://localhost:${cfg.port}  (${cfg.demo ? 'DEMO data' : 'live R1'}, poll ${cfg.pollSeconds}s)`);
+  console.log(`R1 NOC Wall on http://localhost:${cfg.port}  (${cfg.demo ? 'DEMO data' : 'live R1'}, poll ${cfg.pollSeconds}s)`);
   console.log(`  viewer: /${cfg.viewKey ? '?key=<NOC_VIEW_KEY>' : ''}    editor: /admin${cfg.adminKey ? '?key=<NOC_ADMIN_KEY>' : ' (localhost only)'}`);
 });

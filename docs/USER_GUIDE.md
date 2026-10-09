@@ -1,6 +1,6 @@
 # User guide
 
-R1 NOC turns the RUCKUS One API into a wall display. One small server polls RUCKUS One; any browser on your network
+R1 NOC Wall turns the RUCKUS One API into a wall display. One small server polls RUCKUS One; any browser on your network
 shows the result. You design the screens in a browser-based editor.
 
 **Contents**
@@ -31,7 +31,7 @@ shows the result. You design the screens in a browser-based editor.
 ## How it works
 
 ```
- RUCKUS One  ◄── REST (read-only queries, every 60 s) ──  R1 NOC server  ──► browsers (wall TVs, laptops, kiosks)
+ RUCKUS One  ◄── REST (read-only queries, every 60 s) ──  R1 NOC Wall server  ──► browsers (wall TVs, laptops, kiosks)
    public API                                              • keeps a snapshot + 30 days of history (SQLite)
                                                            • evaluates alert rules, sends notifications
                                                            • streams updates to every browser (SSE)
@@ -664,7 +664,7 @@ These are **templates** — adjust paths. The server needs only Node and the pro
 
 ```ini
 [Unit]
-Description=R1 NOC
+Description=R1 NOC Wall
 After=network-online.target
 
 [Service]
