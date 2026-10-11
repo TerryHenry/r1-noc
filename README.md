@@ -1,4 +1,4 @@
-# R1 NOC
+# R1 NOC Wall
 
 A **server-side NOC wall display for RUCKUS One**. One small Node.js server polls the RUCKUS One public API; any browser
 on your network — wall TVs, kiosks, laptops — shows live, customizable dashboards. Design screens in a built-in
