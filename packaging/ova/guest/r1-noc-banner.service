@@ -1,0 +1,8 @@
+[Unit]
+Description=Refresh the console banner with the current addresses
+After=network-online.target r1-noc-firstboot.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/r1-noc-banner

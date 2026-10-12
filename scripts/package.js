@@ -12,7 +12,7 @@ const file = path.join(out, `${name}.tgz`);
 let list;
 try { list = execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split('\n').filter(Boolean); if (!list.length) throw new Error('empty'); }
 catch { const skip = new Set(['data', 'dist', '.git', '.env', 'node_modules', '.DS_Store']); list = []; (function walk(d) { for (const e of fs.readdirSync(path.join(root, d), { withFileTypes: true })) { if (skip.has(e.name)) continue; const rel = path.join(d, e.name); if (e.isDirectory()) walk(rel); else if (e.isFile()) list.push(rel); } })('.'); }
-list = list.filter((f) => !f.startsWith('dist/') && fs.existsSync(path.join(root, f)));
+list = list.filter((f) => !f.startsWith('dist/') && !f.startsWith('packaging/') && fs.existsSync(path.join(root, f)));   // packaging/ builds releases; it is not part of the running app
 const dirty = (() => { try { return execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch { return ''; } })();
 const listFile = path.join(out, `${name}.files`); fs.writeFileSync(listFile, list.join('\n') + '\n');
 // stage under a versioned top folder so the archive unpacks tidily

@@ -1,0 +1,41 @@
+#!/bin/bash
+# Appliance configuration menu:  sudo r1-noc-config
+[ "$(id -u)" = 0 ] || exec sudo "$0" "$@"
+T="R1 NOC Wall appliance"
+msg() { whiptail --title "$T" --msgbox "$1" "${2:-16}" 76; }
+ask() { whiptail --title "$T" --inputbox "$1" 10 76 "$2" 3>&1 1>&2 2>&3; }
+yes() { whiptail --title "$T" --yesno "$1" 10 76; }
+ENV=/etc/r1-noc.env
+urls() { IP=$(hostname -I | awk '{print $1}'); KEY=$(sed -n 's/^NOC_ADMIN_KEY=//p' $ENV | head -1); msg "Wall display:  https://$IP/\nEditor:        https://$IP/admin?key=$KEY\n\n(The certificate is self-signed until you install your own in the editor: HTTPS & certificate. Browsers will warn once.)\nVersion: $(node -p "require('/opt/r1-noc/package.json').version")"; }
+network() {
+  C=$(whiptail --title "$T" --menu "Network addressing" 14 70 3 dhcp "Automatic (DHCP)" static "Fixed IP address" show "Show current addresses" 3>&1 1>&2 2>&3) || return
+  case $C in
+    show) msg "$(ip -br addr)\n\nGateway: $(ip route | awk '/default/{print $3; exit}')\nDNS: $(resolvectl dns 2>/dev/null | tr '\n' ' ')" ;;
+    dhcp) cp /usr/local/share/r1-noc/10-ethernet.network /etc/systemd/network/10-ethernet.network; systemctl restart systemd-networkd; msg "DHCP enabled." 8 ;;
+    static)
+      A=$(ask "IP address with prefix (example 192.168.1.50/24)" "") || return; G=$(ask "Gateway" "") || return; D=$(ask "DNS server(s), space separated" "1.1.1.1 8.8.8.8") || return
+      { printf '[Match]\nName=e*\n\n[Network]\nAddress=%s\nGateway=%s\n' "$A" "$G"; for d in $D; do printf 'DNS=%s\n' "$d"; done; } > /etc/systemd/network/10-ethernet.network
+      systemctl restart systemd-networkd; sleep 2; r1-noc-banner; msg "Static address set to $A.\nRegenerate the HTTPS certificate (menu) so it includes the new address."; ;;
+  esac
+}
+while true; do
+  C=$(whiptail --title "$T" --menu "Choose a task" 22 76 13 \
+    1 "Show wall / editor addresses" 2 "Network (DHCP / static IP)" 3 "Host name" 4 "Time zone" 5 "Regenerate HTTPS certificate (current names/IPs)" \
+    6 "Reset the editor access key" 7 "Turn SSH on/off" 8 "Change the 'noc' password" 9 "Grow the disk to the virtual disk size" \
+    10 "Restart the app / show recent log" 11 "Reboot" 12 "Shut down" 0 "Exit" 3>&1 1>&2 2>&3) || exit 0
+  case $C in
+    1) urls ;;
+    2) network ;;
+    3) N=$(ask "Host name" "$(hostname)") && [ -n "$N" ] && hostnamectl set-hostname "$N" && r1-noc-banner && msg "Host name set. Regenerate the HTTPS certificate so it includes the new name." 8 ;;
+    4) Z=$(ask "Time zone (example America/New_York, Europe/London, UTC)" "$(timedatectl show -p Timezone --value)") && timedatectl set-timezone "$Z" && msg "Time zone is now $(timedatectl show -p Timezone --value)." 8 || msg "Unknown time zone." 8 ;;
+    5) r1-noc-cert && r1-noc-banner && msg "New certificate installed for: $(hostname) $(hostname -I)" 8 ;;
+    6) if yes "Create a new editor access key? The old one stops working."; then K=$(head -c 64 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 22); sed -i '/^NOC_ADMIN_KEY=/d' $ENV; echo "NOC_ADMIN_KEY=$K" >> $ENV; systemctl restart r1-noc; r1-noc-banner; urls; fi ;;
+    7) if systemctl is-enabled --quiet ssh; then yes "SSH is ON. Turn it off?" && systemctl disable --now ssh && msg "SSH is off." 8; else yes "SSH is OFF. Turn it on? (Set a strong 'noc' password first.)" && systemctl enable --now ssh && msg "SSH is on (user: noc)." 8; fi ;;
+    8) passwd noc ;;
+    9) D=$(lsblk -no pkname "$(findmnt -no SOURCE /)"); P=$(cat /sys/class/block/$(basename "$(findmnt -no SOURCE /)")/partition); growpart "/dev/$D" "$P" >/dev/null 2>&1; resize2fs "$(findmnt -no SOURCE /)" >/dev/null 2>&1; msg "Disk: $(df -h / | awk 'NR==2{print $2" total, "$4" free"}')" 8 ;;
+    10) yes "Restart the app now?" && systemctl restart r1-noc; journalctl -u r1-noc -n 40 --no-pager | whiptail --title "$T" --scrolltext --textbox /dev/stdin 22 100 ;;
+    11) yes "Reboot now?" && reboot ;;
+    12) yes "Shut down now?" && poweroff ;;
+    0) exit 0 ;;
+  esac
+done

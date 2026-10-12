@@ -13,6 +13,17 @@ editor, get full-screen alerts and Slack/Teams/email notifications, and receive 
 - **1,000+ widgets** (clients, APs, switches, ports, alarms, DPSK, guests, VLANs, Wi-Fi calling, throughput, RF quality gauges, history…), searchable,
   auto-tiled to fill any screen size.
 
+## Ways to run it
+
+| | |
+|---|---|
+| **Virtual appliance (.ova)** | Import into VMware ESXi / Workstation / Fusion, VirtualBox or Proxmox, power on, open the address shown on the console. HTTPS on 443 out of the box. |
+| **macOS app (.dmg)** | Drag to Applications; lives in the menu bar. Node.js is bundled. |
+| **Windows (setup.exe or portable .zip)** | Per-user installer, or unzip and run `R1-NOC-Wall.exe`. Node.js is bundled. |
+| **From source** | `git clone`, `npm start` (Node.js 22.5+). |
+
+All of them update in place from a downloaded release file (editor → *Software update*). See [Installing](docs/USER_GUIDE.md#installing-the-appliance-mac-app-and-windows-app) and [packaging/](packaging/README.md).
+
 ## Quick start
 
 ```bash

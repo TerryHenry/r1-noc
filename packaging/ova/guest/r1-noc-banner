@@ -1,0 +1,24 @@
+#!/bin/bash
+# Writes the console login banner (/etc/issue) with the addresses to use.
+VER=$(node -p "require('/opt/r1-noc/package.json').version" 2>/dev/null || echo "?")
+KEY=$(sed -n 's/^NOC_ADMIN_KEY=//p' /etc/r1-noc.env 2>/dev/null | head -1)
+IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+if [ -n "$IP" ]; then
+  W="https://$IP/"; E="https://$IP/admin?key=$KEY"; N="Network: $(hostname -I | awk '{print $1}')  (DHCP unless you set a static address)"
+else
+  W="(waiting for a network address)"; E="(waiting for a network address)"; N="No IP address yet — check the virtual network, or run: sudo r1-noc-config"
+fi
+cat > /etc/issue <<EOF
+
+  R1 NOC Wall $VER  —  appliance
+
+    Wall display : $W
+    Editor       : $E
+    $N
+
+  Console login: user "noc" (first-time password "noc" — you must change it).
+  Then run:  sudo r1-noc-config     (network, time zone, certificate, SSH, disk ...)
+
+EOF
+# make already-running login prompts (console and serial) show the new text
+( /sbin/agetty --reload || /usr/sbin/agetty --reload ) >/dev/null 2>&1 || true

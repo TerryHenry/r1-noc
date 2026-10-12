@@ -1,0 +1,9 @@
+#!/bin/bash
+# (Re)generate the self-signed HTTPS certificate for this machine's current name and addresses, and serve HTTPS on 443.
+set -euo pipefail
+HOSTS="$(hostname) localhost 127.0.0.1 $(hostname -I 2>/dev/null || true)"
+runuser -u r1noc -- env NOC_DATA_DIR=/var/lib/r1-noc /usr/local/bin/node -e "
+const t = require('/opt/r1-noc/lib/tls');
+(async () => { const h = process.argv.slice(1); await t.selfSigned({ commonName: h[0], hosts: h, days: 3650, keyType: 'ec' }); t.saveConfig({ enabled: true, port: 443, redirect: true }); })().catch((e) => { console.error(e.message); process.exit(1); });
+" $HOSTS
+systemctl --no-block try-restart r1-noc.service || true

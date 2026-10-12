@@ -1,0 +1,13 @@
+[Unit]
+Description=R1 NOC Wall first-boot setup (admin key, certificate, SSH host keys)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=!/var/lib/r1-noc/.provisioned
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/r1-noc-firstboot
+
+[Install]
+WantedBy=multi-user.target

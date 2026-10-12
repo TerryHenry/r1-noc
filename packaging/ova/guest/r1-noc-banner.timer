@@ -1,0 +1,9 @@
+[Unit]
+Description=Refresh the console banner every two minutes
+
+[Timer]
+OnBootSec=30
+OnUnitActiveSec=120
+
+[Install]
+WantedBy=timers.target

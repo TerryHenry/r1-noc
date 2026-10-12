@@ -3,3 +3,6 @@ data/
 node_modules/
 .DS_Store
 dist/
+packaging/.cache/
+__pycache__/
+*.pyc

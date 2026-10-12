@@ -320,6 +320,9 @@ cycle();
 schedule();
 
 upgrade.cleanWork();
+if (process.env.NOC_PARENT_PID) {   // started by a launcher (the Mac menu-bar app): stop if it disappears
+  const parent = Number(process.env.NOC_PARENT_PID); setInterval(() => { try { process.kill(parent, 0); } catch { process.exit(0); } }, 5000).unref();
+}
 backup.auto(); setInterval(backup.auto, 6 * 3600e3);   // daily credential-free snapshot (kept 14 days) in data/backups
 let bindTries = 0;   // after an in-app restart the old process may still hold the port for a moment
 server.on('error', (e) => { if (e.code === 'EADDRINUSE' && process.env.NOC_RESTARTED && bindTries++ < 40) return void setTimeout(() => server.listen(cfg.port), 500); console.error(`Cannot listen on port ${cfg.port}: ${e.message}`); process.exit(1); });
