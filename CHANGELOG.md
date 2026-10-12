@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.2
+- **Switching events** (new widget group + **Switch events** preset): *flapping ports*, port link changes, spanning-tree state changes, err-disable events, a recent-events list, noisiest switches/venues and events per hour — derived from the app's own port polling (sampled every few minutes; the log is kept 7 days) — plus *loops detected*, *port-flap* and *TCP SYN flood* incidents and a switching-incident list from R1's analytics service. Works per venue and per customer; three new alert metrics.
+
 ## 0.3.1
 - **One connection panel.** *R1 connection* now starts with a switch — *One RUCKUS One account* / *MSP — one key for all my customers* / *MSP — a separate key for each customer* — and shows only the fields for the chosen mode. The separate *Customers (MSP)* panel is gone. Existing installs keep working (the mode is worked out from what you had configured).
 

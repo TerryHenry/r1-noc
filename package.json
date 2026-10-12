@@ -1,6 +1,6 @@
 {
   "name": "r1-noc",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "R1 NOC Wall — server-side NOC display for RUCKUS One. Polls the public R1 API and serves a customizable wall dashboard to any browser.",
   "private": true,
   "engines": {

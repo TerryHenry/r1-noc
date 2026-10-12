@@ -209,6 +209,17 @@ R1's analytics service for the *Client experience* widgets)
 automatically switch that data source on while they're on a screen. The first poll after you add one can take a minute
 to fill in. If a source fails, only the widgets that need it say so; the rest keep working.
 
+### Switching events: flaps, spanning-tree changes, loops
+
+The **Switch events** preset (and the *Switching events* group in the widget picker) covers the "what just happened on my switches" questions. Two sources:
+
+- **Port changes, from the app's own polling.** The server fetches switch ports every few minutes (only while a widget or alert rule needs them) and compares each port with the previous fetch: **link up/down**, **spanning-tree state changes** (for example forwarding → blocking), and **error-disable** events. The log is kept for 7 days in `data/port-events*.json`, so it survives restarts (the first fetch after a start only sets the baseline).
+  A port is **flapping** when its link changed state at least 3 times in the last 30 minutes. Widgets: *Flapping ports*, *Port link changes (24 h)*, *Spanning-tree changes (24 h)*, *Err-disable events (24 h)*, *Recent port events*, *Flapping ports (list)*, *Noisiest switches*, *Port events by venue / type*, *Port events per hour*. Alert rules: *Flapping switch ports*, *Spanning-tree state changes in the last hour*.
+  Because ports are sampled, a flap faster than the fetch interval can be missed, and changes while the server was stopped are not seen.
+- **Incidents, from R1's analytics service** (experimental): *Loops detected (7 d)*, *Port-flap incidents (7 d)*, *TCP SYN flood incidents (7 d)*, *Open switching incidents*, a switching-incident list and a by-type chart (loop detection, port flap, congestion, uplink congestion, VLAN mismatch, LLDP status, memory). Alert rules: *Switch loop incidents ongoing*, *Open switching incidents*.
+
+Every widget has the usual **Venue** (and, in MSP mode, **Customer**) filter.
+
 ### Throughput and traffic
 
 RUCKUS One's public API reports each client's **cumulative bytes up and down for its current session**, but not a rate.
