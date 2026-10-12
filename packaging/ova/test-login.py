@@ -35,5 +35,16 @@ def curl(path):
 print('admin API without key (from outside):', curl('/api/settings'), '(expect 403)')
 print('admin API with key:', curl(f'/api/settings?key={key}'), '(expect 200)')
 print('viewer:', curl('/'), '(expect 200)')
+def post(path, body, cookie=''):
+    h = ['-H', 'Content-Type: application/json'] + (['-H', 'Cookie: ' + cookie] if cookie else [])
+    r = subprocess.run(['curl', '-sk', '-m', '15', '-i', '-X', 'POST', *h, '-d', json.dumps(body), f'https://127.0.0.1:5443{path}'], capture_output=True, text=True).stdout
+    return r.split('\r\n', 1)[0], r
+ln, _ = post('/api/login', {'user': 'noc', 'password': 'wrong-password'}); print('login with a wrong noc password:', ln, '(expect 401)')
+ln, full = post('/api/login', {'user': 'noc', 'password': 'Appliance-Test-42'}); print('login with the real noc password:', ln, '(expect 200)')
+m2 = re.search(r'noc_session=([0-9a-f]{64})', full); ck = ('noc_session=' + m2.group(1)) if m2 else ''
+print('session cookie issued:', bool(ck), '| Secure flag:', 'Secure' in full)
+print('admin API with session:', subprocess.run(['curl', '-sk', '-m', '10', '-o', '/dev/null', '-w', '%{http_code}', '-H', 'Cookie: ' + ck, 'https://127.0.0.1:5443/api/settings'], capture_output=True, text=True).stdout, '(expect 200)')
+print('/admin without session:', subprocess.run(['curl', '-sk', '-m', '10', '-o', '/dev/null', '-w', '%{http_code} %{redirect_url}', 'https://127.0.0.1:5443/admin'], capture_output=True, text=True).stdout, '(expect 302 to /login)')
+ln, _ = post('/api/login', {'user': 'root', 'password': 'whatever'}); print('login as root (not allowed):', ln, '(expect 401)')
 print('--- app log tail:'); print(run('journalctl -u r1-noc -n 8 --no-pager | cut -c1-160'))
 print('--- shutdown'); c.sendline('echo Appliance-Test-42 | sudo -S poweroff'); c.expect(pexpect.EOF, timeout=120); print('powered off cleanly')
