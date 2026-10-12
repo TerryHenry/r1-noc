@@ -547,6 +547,11 @@ What changes:
 - **Customer choice on every widget** (next to *Venue*): pin a tile to one customer and it shows only that customer's data,
   with the customer's name in the title. Venue pickers read *Customer / Venue*. Trend widgets pinned to a customer use that
   customer's own history (recorded from the day you enable MSP mode).
+- **Fleet statistics across all customers.** A widget with no customer chosen already covers *every* customer (e.g. *Clients by SSID*, *AP models*). On top of that,
+  every entity has a **Customer** breakdown — search the catalog for "customer": clients, APs, radios, switches, ports, alarms, DPSK users, guests and networks *by customer*
+  (counts, throughput, traffic, signal, PoE and so on, as bars, donuts or tables), plus *clients / APs / alarms by customer over time*. Fleet scorecards (*Venues, APs, Switches, Clients,
+  Throughput, Devices offline — all customers*), the **Fleet totals** table and rankings (*Offline devices by customer*, *Throughput by customer*) sit under **Customers (MSP)**.
+  The **MSP fleet statistics** preset puts them on one screen. These widgets stay out of the picker until at least one customer is configured.
 - **Licensing (MSP account only)**: the Customers overview gains **Account** (paid / trial, days left) and **Licenses** columns; the **MSP licensing** preset adds *Next account expiry*, *Subscriptions expiring (60 d)*, *Trial and expiry watch*, *Licenses by customer* and *MSP subscriptions*. Alert rules can use *Days until the nearest customer account expires* and *MSP subscriptions expiring within 60 days*.
 - **Customers (MSP) widgets**: *Customers overview* (table: status, venues, APs and switches online, clients, critical/major
   alarms, connection success, open incidents), *Customer health* (list), clients / offline APs / alarms / critical alarms /

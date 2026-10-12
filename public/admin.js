@@ -141,7 +141,7 @@ function pickBtn(c, u) {
 function pickerBody() {
   const u = usage();
   const terms = pickQ.toLowerCase().split(/\s+/).filter(Boolean);
-  const items = catalog.filter((c) => (!unusedOnly || !u.has(c.type)) && terms.every((t) => `${c.title} ${c.group} ${c.sub} ${c.type}`.toLowerCase().includes(t)));
+  const items = catalog.filter((c) => (!unusedOnly || !u.has(c.type)) && (customers.length || !c.msp || u.has(c.type)) && terms.every((t) => `${c.title} ${c.group} ${c.sub} ${c.type}`.toLowerCase().includes(t)));
   if (!items.length) return '<p style="color:var(--muted)">No widgets match.</p>';
   return [...new Set(items.map((c) => c.group))].map((g) => {
     const gi = items.filter((c) => c.group === g);

@@ -2,6 +2,7 @@
 
 ## 0.3.0
 - **MSP account mode** — one API key created in the MSP's own account lists every customer (`/tenants/query`) and reads each one through R1's *delegated access* (`x-rks-tenantid`). No per-customer keys needed (they still work alongside it). Untick customers you don't want on the wall.
+- **Fleet statistics across all customers**: a *Customer* dimension on clients, APs, radios, switches, ports, alarms, DPSK, guests and networks (84 generated widgets: counts, throughput, traffic, signal, PoE… by customer, and over time by customer), fleet KPIs and totals, offline/throughput rankings, and an **MSP fleet statistics** preset.
 - New MSP widgets and presets: **MSP licensing** (nearest account/trial expiry, licenses per customer, MSP subscriptions, trial watch), Account and Licenses columns on the Customers overview; alert metrics for account expiry and expiring subscriptions.
 
 ## 0.2.1
