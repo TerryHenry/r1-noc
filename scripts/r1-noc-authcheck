@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+# Root-owned helper: is this the right password for an allowed local account?  Run by the app through sudo:
+#   echo 'password' | sudo -n /usr/local/sbin/r1-noc-authcheck noc        exit 0 = correct
+# The password is read from stdin only. Only accounts listed in /etc/r1-noc-auth-users (default: noc) can be checked.
+use strict; use warnings;
+my $u = shift // ''; exit 2 unless $u =~ /^[a-z_][a-z0-9_-]{0,31}$/;
+my @allowed = ('noc');
+if (open(my $a, '<', '/etc/r1-noc-auth-users')) { @allowed = grep { /^[a-z_][a-z0-9_-]{0,31}$/ } map { s/\s+//gr } <$a>; close $a; }
+exit 3 unless grep { $_ eq $u } @allowed;
+my $pw = <STDIN>; exit 4 unless defined $pw; chomp $pw; exit 4 if length($pw) == 0 || length($pw) > 256;
+open(my $fh, '<', '/etc/shadow') or exit 5;
+my $hash; while (my $l = <$fh>) { my @f = split /:/, $l; if ($f[0] eq $u) { $hash = $f[1]; last; } }
+close $fh;
+exit 6 unless defined $hash && $hash =~ /^\$/;          # locked / no password
+my $c = crypt($pw, $hash); exit 1 unless defined $c && length($c) == length($hash);
+my $diff = 0; $diff |= ord(substr($c, $_, 1)) ^ ord(substr($hash, $_, 1)) for 0 .. length($hash) - 1;
+exit($diff == 0 ? 0 : 1);

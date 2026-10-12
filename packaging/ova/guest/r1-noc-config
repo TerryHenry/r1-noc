@@ -6,7 +6,7 @@ msg() { whiptail --title "$T" --msgbox "$1" "${2:-16}" 76; }
 ask() { whiptail --title "$T" --inputbox "$1" 10 76 "$2" 3>&1 1>&2 2>&3; }
 yes() { whiptail --title "$T" --yesno "$1" 10 76; }
 ENV=/etc/r1-noc.env
-urls() { IP=$(hostname -I | awk '{print $1}'); KEY=$(sed -n 's/^NOC_ADMIN_KEY=//p' $ENV | head -1); msg "Wall display:  https://$IP/\nEditor:        https://$IP/admin?key=$KEY\n\n(The certificate is self-signed until you install your own in the editor: HTTPS & certificate. Browsers will warn once.)\nVersion: $(node -p "require('/opt/r1-noc/package.json').version")"; }
+urls() { IP=$(hostname -I | awk '{print $1}'); KEY=$(sed -n 's/^NOC_ADMIN_KEY=//p' $ENV | head -1); msg "Wall display:  https://$IP/\nEditor:        https://$IP/admin   (sign in as "noc" with your console password)\nKey address:   https://$IP/admin?key=$KEY   (for scripts)\n\n(The certificate is self-signed until you install your own in the editor: HTTPS & certificate. Browsers will warn once.)\nVersion: $(node -p "require('/opt/r1-noc/package.json').version")"; }
 network() {
   C=$(whiptail --title "$T" --menu "Network addressing" 14 70 3 dhcp "Automatic (DHCP)" static "Fixed IP address" show "Show current addresses" 3>&1 1>&2 2>&3) || return
   case $C in

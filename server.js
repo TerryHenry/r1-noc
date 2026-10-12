@@ -16,6 +16,7 @@ const feeds = require('./lib/feeds');
 const tls = require('./lib/tls');
 const backup = require('./lib/backup');
 const upgrade = require('./lib/upgrade');
+const auth = require('./lib/auth');
 
 let layout = dash.load();
 const refreshNeeds = () => collect.setNeeds(new Set([...widgets.needsFor({ screens: dash.allScreens(layout) }), ...rules.needs()]));
@@ -113,8 +114,10 @@ setInterval(() => { for (const rep of report.get()) if (report.due(rep) && colle
 // ---- auth ----
 const isLoopback = (req) => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
 function keyOf(req, url) { return url.searchParams.get('key') || req.headers['x-noc-key'] || ''; }
-const canView = (req, url) => !cfg.viewKey || keyOf(req, url) === cfg.viewKey || keyOf(req, url) === cfg.adminKey && !!cfg.adminKey;
-const canAdmin = (req, url) => (cfg.adminKey ? keyOf(req, url) === cfg.adminKey : isLoopback(req));
+const canView = (req, url) => !cfg.viewKey || keyOf(req, url) === cfg.viewKey || keyOf(req, url) === cfg.adminKey && !!cfg.adminKey || !!auth.session(req);
+// Admin = the admin key, or a signed-in session, or (only when neither a key nor sign-in is configured) the machine itself.
+const canAdmin = (req, url) => (cfg.adminKey && keyOf(req, url) === cfg.adminKey) || !!auth.session(req) || (!cfg.adminKey && !auth.enabled() && isLoopback(req));
+const secureReq = (req) => Boolean(req.socket.encrypted) || req.headers['x-forwarded-proto'] === 'https';
 
 // ---- http ----
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json' };
@@ -134,16 +137,25 @@ const handle = async (req, res) => {
   const p = url.pathname;
   try {
     if (p.startsWith('/api/')) {
+      if (p === '/api/login' && req.method === 'POST') {
+        const b = await readBody(req); const r = await auth.login(req.socket.remoteAddress, b.user, b.password);
+        if (!r.ok) return json(res, r.status, { error: r.error });
+        res.setHeader('Set-Cookie', auth.setCookie(r.token, secureReq(req)));
+        const next = typeof b.next === 'string' && /^\/(admin|launch\.html)?(\?.*)?$/.test(b.next) ? b.next : '/admin';
+        return json(res, 200, { ok: true, next });
+      }
+      if (p === '/api/logout' && req.method === 'POST') { auth.logout(req); res.setHeader('Set-Cookie', auth.clearCookie(secureReq(req))); return json(res, 200, { ok: true }); }
+      if (p === '/api/auth' && req.method === 'GET') { const sess = auth.session(req); return json(res, 200, { ...auth.info(), user: sess ? sess.user : '', canAdmin: canAdmin(req, url) }); }
       if (!canView(req, url)) return json(res, 401, { error: 'Missing or wrong ?key=' });
-      if (p === '/api/config' && req.method === 'GET') return json(res, 200, { layout, control, view: dash.scheduledView(layout), serverNow: Date.now(), venues: collect.get().venues, customers: (collect.get().customers || []).map((c) => ({ id: c.id, name: c.name })), canAdmin: canAdmin(req, url), version: upgrade.version() });
+      if (p === '/api/config' && req.method === 'GET') return json(res, 200, { layout, control, view: dash.scheduledView(layout), serverNow: Date.now(), venues: collect.get().venues, customers: (collect.get().customers || []).map((c) => ({ id: c.id, name: c.name })), canAdmin: canAdmin(req, url), version: upgrade.version(), auth: { enabled: auth.enabled(), user: (auth.session(req) || {}).user || '' } });
       if (p === '/api/config' && req.method === 'PUT') {
-        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires localhost or ?key=<NOC_ADMIN_KEY>' });
+        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires signing in (or localhost / ?key=<NOC_ADMIN_KEY>)', login: auth.enabled() });
         try { layout = dash.save(await readBody(req)); refreshNeeds(); reanchorControl(); } catch (e) { return json(res, 400, { error: e.message }); }
         broadcast('config', { layout, control, serverNow: Date.now() }); broadcastData(); cycle();
         return json(res, 200, { layout });
       }
       if (p === '/api/settings' || p === '/api/settings/test') {
-        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires localhost or ?key=<NOC_ADMIN_KEY>' });
+        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires signing in (or localhost / ?key=<NOC_ADMIN_KEY>)', login: auth.enabled() });
         if (p === '/api/settings' && req.method === 'GET') return json(res, 200, settings.get());
         if (p === '/api/settings' && req.method === 'PUT') {
           try { settings.save(await readBody(req)); } catch (e) { return json(res, 400, { error: e.message }); }
@@ -157,8 +169,15 @@ const handle = async (req, res) => {
           try { return json(res, 200, { ok: true, ...(await r1.test()) }); } catch (e) { return json(res, 200, { ok: false, error: e.message }); }
         }
       }
+      if (p === '/api/auth/local') {
+        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access required' });
+        try {
+          if (req.method === 'PUT') { const b = await readBody(req); auth.setLocal(b.user, b.password); res.setHeader('Set-Cookie', auth.clearCookie(secureReq(req))); return json(res, 200, { ...auth.info(), relogin: true }); }
+          if (req.method === 'DELETE') { auth.removeLocal(); return json(res, 200, auth.info()); }
+        } catch (e) { return json(res, 400, { error: e.message }); }
+      }
       if (p.startsWith('/api/upgrade')) {
-        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires localhost or ?key=<NOC_ADMIN_KEY>' });
+        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires signing in (or localhost / ?key=<NOC_ADMIN_KEY>)', login: auth.enabled() });
         try {
           if (p === '/api/upgrade' && req.method === 'GET') return json(res, 200, upgrade.status());
           if (upgrade.disabled()) return json(res, 403, { error: 'Upgrades are disabled on this server (NOC_UPGRADE=off)' });
@@ -183,7 +202,7 @@ const handle = async (req, res) => {
         } catch (e) { return json(res, 400, { error: e.message }); }
       }
       if (p.startsWith('/api/tls') || p.startsWith('/api/backup') || p.startsWith('/api/restore')) {
-        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires localhost or ?key=<NOC_ADMIN_KEY>' });
+        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires signing in (or localhost / ?key=<NOC_ADMIN_KEY>)', login: auth.enabled() });
         try {
           if (p === '/api/tls' && req.method === 'GET') return json(res, 200, { ...tls.info(), listening: httpsPort || 0, hostSuggestions: tls.defaultHosts() });
           if (p === '/api/tls/config' && req.method === 'PUT') { tls.saveConfig(await readBody(req)); applyTls(); await settle(); return json(res, 200, { ...tls.info(), listening: httpsPort || 0 }); }
@@ -214,7 +233,7 @@ const handle = async (req, res) => {
         broadcastData(); return json(res, 200, { alerts: rules.active() });
       }
       if (p === '/api/rules' || p === '/api/notify' || p === '/api/notify/test') {
-        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires localhost or ?key=<NOC_ADMIN_KEY>' });
+        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires signing in (or localhost / ?key=<NOC_ADMIN_KEY>)', login: auth.enabled() });
         if (p === '/api/rules' && req.method === 'GET') return json(res, 200, { rules: rules.get(), metrics: rules.catalog(), active: rules.active() });
         if (p === '/api/rules' && req.method === 'PUT') {
           try { rules.save(await readBody(req)); } catch (e) { return json(res, 400, { error: e.message }); }
@@ -229,7 +248,7 @@ const handle = async (req, res) => {
         }
       }
       if (p === '/api/reports' || p === '/api/reports/run') {
-        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires localhost or ?key=<NOC_ADMIN_KEY>' });
+        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires signing in (or localhost / ?key=<NOC_ADMIN_KEY>)', login: auth.enabled() });
         if (p === '/api/reports' && req.method === 'GET') return json(res, 200, { reports: report.get(), files: report.files(), views: ['Main', ...(layout.views || []).map((v) => v.name)].map((n) => ({ name: n, screens: dash.viewByName(layout, n).screens.map((x) => x.name) })) });
         if (p === '/api/reports' && req.method === 'PUT') { try { report.save(await readBody(req)); } catch (e) { return json(res, 400, { error: e.message }); } return json(res, 200, { reports: report.get(), files: report.files() }); }
         if (p === '/api/reports/run' && req.method === 'POST') {
@@ -239,7 +258,7 @@ const handle = async (req, res) => {
         }
       }
       if (p === '/api/ticker' || p === '/api/ticker/test') {
-        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires localhost or ?key=<NOC_ADMIN_KEY>' });
+        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires signing in (or localhost / ?key=<NOC_ADMIN_KEY>)', login: auth.enabled() });
         if (p === '/api/ticker' && req.method === 'GET') return json(res, 200, { config: feeds.get(), status: feeds.status() });
         if (p === '/api/ticker' && req.method === 'PUT') { try { const c = feeds.save(await readBody(req), broadcastData); broadcastData(); return json(res, 200, { config: c, status: feeds.status() }); } catch (e) { return json(res, 400, { error: e.message }); } }
         if (p === '/api/ticker/test' && req.method === 'POST') { try { const r = await feeds.test(await readBody(req)); return json(res, 200, { ok: true, lines: r.lines, resolved: r.feed.type === 'weather' ? { lat: r.feed.lat, lon: r.feed.lon, label: r.feed.label } : null }); } catch (e) { return json(res, 200, { ok: false, error: e.message }); } }
@@ -250,7 +269,7 @@ const handle = async (req, res) => {
         return json(res, 200, { source: S.source, at: S.at, errors: S.errors, diag: S.diag || null });
       }
       if (p === '/api/config/reset' && req.method === 'POST') {
-        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires localhost or ?key=<NOC_ADMIN_KEY>' });
+        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access requires signing in (or localhost / ?key=<NOC_ADMIN_KEY>)', login: auth.enabled() });
         layout = dash.save(dash.DEFAULT); refreshNeeds();
         broadcast('config', { layout, control, serverNow: Date.now() }); broadcastData(); cycle();
         return json(res, 200, { layout });
@@ -279,7 +298,8 @@ const handle = async (req, res) => {
       const f = path.join(report.DIR, path.basename(p));
       return fs.readFile(f, (err, buf) => { if (err) { res.writeHead(404); return res.end('Not found'); } res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(buf); });
     }
-    const file = p === '/' ? '/index.html' : p === '/admin' ? '/admin.html' : p;
+    if (p === '/admin' && auth.enabled() && !canAdmin(req, url)) { res.writeHead(302, { Location: '/login?next=%2Fadmin' }); return res.end(); }
+    const file = p === '/' ? '/index.html' : p === '/admin' ? '/admin.html' : p === '/login' ? '/login.html' : p;
     const full = path.normalize(path.join(__dirname, 'public', file));
     if (!full.startsWith(path.join(__dirname, 'public') + path.sep)) { res.writeHead(403); return res.end(); }
     fs.readFile(full, (err, buf) => {

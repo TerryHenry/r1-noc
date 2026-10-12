@@ -11,7 +11,7 @@ Raspberry Pi 4/5, a VM) and any browser for the display(s).
 If you downloaded the `.ova` instead of installing from source, you can skip steps 1–2 and 7–9:
 
 1. Import the `.ova` into VMware / VirtualBox / Proxmox and attach it to your network.
-2. Power on. The console shows the wall address (`https://<ip>/`) and the editor address with its access key (`https://<ip>/admin?key=…`). It uses DHCP until you set a fixed address.
+2. Power on. The console shows the wall address (`https://<ip>/`) and the editor address (`https://<ip>/admin`) — sign in there as **`noc`** with the console password you set. It uses DHCP until you set a fixed address.
 3. **Want a static IP?** Log in at the console as `noc` (password `noc`; you must change it), run `sudo r1-noc-config`, choose **Network → Fixed IP address**, then choose **Regenerate HTTPS certificate** so the certificate covers the new address.
 4. Open the editor address and continue at step 4 below (*Connect the server to your tenant*). The same menu sets the host name and time zone, turns SSH on or off, and resets the editor key. Details: [Installing: appliance, Mac app, Windows](USER_GUIDE.md#installing-the-appliance-mac-app-and-windows-app).
 

@@ -639,6 +639,16 @@ Settings come from environment variables, an optional `.env` file in the project
 | nothing set | anyone who can reach the port can **view**; the editor works **only from the server itself** |
 | `NOC_VIEW_KEY=…` | viewers must add `?key=…` to the URL |
 | `NOC_ADMIN_KEY=…` | the editor works remotely at `/admin?key=…` |
+| an **editor account** (below) or the appliance's `noc` login | the editor works remotely at `/admin` after signing in — no key in the address |
+
+### Signing in to the editor
+Instead of putting `?key=…` in the address, you can sign in at **`/login`** (opening `/admin` sends you there). Two kinds of account:
+
+- **Editor account** — in the editor, *Editor login*: choose a user name and a password (8+ characters). Stored hashed (scrypt) in `data/auth.json`. Lost the password? On the server run `node scripts/passwd.js <user> <password>` (or `--remove`).
+- **Machine login (virtual appliance)** — the appliance's `noc` user and its console password work out of the box; change that password and the web sign-in follows. (A small root-owned helper checks the password; only the users listed in `/etc/r1-noc-auth-users`, default `noc`, can sign in this way.)
+
+Sessions last 12 hours and survive restarts; repeated wrong passwords lock that address out for a minute, then longer. The `?key=` address keeps working, and viewing the wall never needs a sign-in (unless you set a view key). Once an account exists, the "localhost needs no key" shortcut is off, so you sign in even on the server itself.
+Use HTTPS so the password is not sent in clear text.
 
 Other points:
 
@@ -736,14 +746,14 @@ A Debian 12 (64-bit) machine with the app preinstalled: 2 vCPU, 2 GB RAM, 8 GB t
 
 1. **Import** the `.ova` (ESXi / vSphere: *Deploy OVF template*; VMware Workstation / Fusion and VirtualBox: *File → Import*; Proxmox: `qm importovf`). Attach the network adapter to the network your displays and the R1 cloud can reach.
 2. **Power on.** The console shows the address to use once the VM has an IP:
-   `Wall display: https://<ip>/` and `Editor: https://<ip>/admin?key=<generated key>`. The key is generated on first boot and is unique to each copy.
+   `Wall display: https://<ip>/` and `Editor: https://<ip>/admin`. **Sign in as `noc`** with the console password you set. (A random access key is also generated on first boot and shown by `sudo r1-noc-config`; it is only needed for scripts.)
    HTTPS uses a self-signed certificate created for the VM's names/IPs (browsers warn once); install your own under *HTTPS & certificate*. Plain HTTP on port 80 redirects to HTTPS.
 3. Open the editor, **R1 connection**, enter your RUCKUS One API details.
 4. **Console login**: user `noc`, first-time password `noc` (you must change it immediately). Then `sudo r1-noc-config` is a menu for: addresses and the access key, **static IP / DHCP**, host name,
    time zone, **regenerating the certificate** (after a name/IP change), resetting the editor key, **SSH on/off** (off by default), the `noc` password, growing the disk after enlarging the virtual disk, restart/log, reboot.
 5. **Updates**: the editor's *Software update* works as usual (the service restarts itself). Debian security updates install automatically (needs internet). Your settings live in `/var/lib/r1-noc`; back them up with *Backup & restore*.
 
-Notes: the editor needs the access key because the appliance is reachable over the network (the localhost-only rule applies to the VM itself). Set `NOC_VIEW_KEY` in `/etc/r1-noc.env` (then `sudo systemctl restart r1-noc`) to require a key for viewing too.
+Notes: the editor needs a sign-in because the appliance is reachable over the network. Set `NOC_VIEW_KEY` in `/etc/r1-noc.env` (then `sudo systemctl restart r1-noc`) to require a key for viewing too.
 VMware Tools (open-vm-tools) are installed; VirtualBox users may prefer the "Bridged Adapter" so displays can reach the VM.
 
 ### macOS app (.dmg)

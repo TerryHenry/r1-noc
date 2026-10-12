@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in — R1 NOC Wall</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  body { overflow: auto; height: auto; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: .8rem; padding: 1.6rem 1.8rem; width: min(22rem, 92vw); }
+  h1 { margin: 0 0 .2rem; font-size: 1.25rem; } p { margin: 0 0 1rem; color: var(--muted); font-size: .9rem; }
+  label { display: flex; flex-direction: column; gap: .25rem; font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .8rem; }
+  input { font: inherit; font-size: 1rem; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: .4rem; padding: .5rem .6rem; text-transform: none; letter-spacing: 0; }
+  button { width: 100%; font: inherit; font-weight: 600; padding: .55rem; border-radius: .4rem; border: 1px solid var(--info); background: var(--info); color: #fff; cursor: pointer; }
+  button:disabled { opacity: .6; cursor: wait; } #err { color: var(--bad); min-height: 1.3rem; font-size: .9rem; margin-top: .6rem; }
+</style>
+</head>
+<body>
+<form class="card" id="f" autocomplete="on">
+  <h1>R1 NOC Wall</h1>
+  <p>Sign in to open the editor.</p>
+  <label>User name<input id="u" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" autofocus required></label>
+  <label>Password<input id="p" name="password" type="password" autocomplete="current-password" required></label>
+  <button id="b" type="submit">Sign in</button>
+  <div id="err" role="alert"></div>
+</form>
+<script>
+  const q = new URLSearchParams(location.search), $ = (s) => document.querySelector(s);
+  try { $('#u').value = localStorage.getItem('noc_user') || ''; if ($('#u').value) $('#p').focus(); } catch { /* private mode */ }
+  $('#f').addEventListener('submit', async (e) => {
+    e.preventDefault(); $('#b').disabled = true; $('#err').textContent = '';
+    try {
+      const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: $('#u').value, password: $('#p').value, next: q.get('next') || '/admin' }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+      try { localStorage.setItem('noc_user', $('#u').value); } catch { /* ignore */ }
+      location.href = j.next || '/admin';
+    } catch (er) { $('#err').textContent = er.message; $('#p').value = ''; $('#p').focus(); }
+    $('#b').disabled = false;
+  });
+</script>
+</body>
+</html>

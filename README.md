@@ -17,7 +17,7 @@ editor, get full-screen alerts and Slack/Teams/email notifications, and receive 
 
 | | |
 |---|---|
-| **Virtual appliance (.ova)** | Import into VMware ESXi / Workstation / Fusion, VirtualBox or Proxmox, power on, open the address shown on the console. HTTPS on 443 out of the box. DHCP by default; for a **static IP** log in at the console (`noc` / `noc`) and run `sudo r1-noc-config` → *Network*. |
+| **Virtual appliance (.ova)** | Import into VMware ESXi / Workstation / Fusion, VirtualBox or Proxmox, power on, open the address shown on the console and sign in as `noc`. HTTPS on 443 out of the box. DHCP by default; for a **static IP** log in at the console (`noc` / `noc`) and run `sudo r1-noc-config` → *Network*. |
 | **macOS app (.dmg)** | Drag to Applications; lives in the menu bar. Node.js is bundled. |
 | **Windows (setup.exe or portable .zip)** | Per-user installer, or unzip and run `R1-NOC-Wall.exe`. Node.js is bundled. |
 | **From source** | `git clone`, `npm start` (Node.js 22.5+). |

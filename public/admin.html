@@ -82,7 +82,7 @@
     <label>Dashboard title<input id="title" maxlength="60"></label>
     <label>Rotate every (sec, 0 = off)<input id="rot" type="number" min="0" max="3600"></label>
     <span id="msg"></span>
-    <a class="chip" id="view" href="/">← Viewer</a>
+    <a class="chip" id="view" href="/">← Viewer</a> <span id="signedIn" style="font-size:.85rem;color:var(--muted);margin-left:.6rem"></span>
     <a class="chip" id="launch" href="/launch.html">Multi-display launcher</a>
     <button id="reset" class="danger" title="Replace all screens and widgets with the built-in defaults">Reset to defaults</button>
     <button class="primary" id="save">Save &amp; apply</button>
@@ -115,6 +115,15 @@
       <button id="mspAdd">+ Add customer</button>
       <button class="primary" id="mspSave">Save customers</button>
       <span id="mspMsg"></span>
+    </div>
+  </details>
+  <details class="panel" id="authPanel">
+    <summary style="cursor:pointer;font-weight:600">Editor login <span id="authState" style="font-weight:400;color:var(--muted);margin-left:.6rem"></span></summary>
+    <p style="color:var(--muted);margin:.6rem 0">Sign in to the editor with a user name and password instead of the <code>?key=</code> address. Create an account here; on the virtual appliance the machine's <code>noc</code> user already works. The password is stored hashed on this server.</p>
+    <div class="top">
+      <label>User name<input id="authUser" size="18" autocomplete="off"></label>
+      <label>New password (8+ characters)<input id="authPass" type="password" size="24" autocomplete="new-password"></label>
+      <button class="primary" id="authSave">Save account</button><button id="authRemove" class="danger">Remove account</button><span id="authMsg"></span>
     </div>
   </details>
   <details class="panel" id="secPanel">

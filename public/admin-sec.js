@@ -127,3 +127,23 @@ document.addEventListener('click', async (e) => {
   }
 });
 loadUp();
+
+// ---------- editor login ----------
+async function loadAuth() {
+  try {
+    const a = await secJson('/api/auth');
+    $('#authState').textContent = a.enabled ? `${a.os ? 'machine user (noc)' : ''}${a.os && a.local.length ? ' + ' : ''}${a.local.length ? 'account "' + a.local[0] + '"' : ''} · ${a.user ? 'signed in as ' + a.user : 'signed in by key / localhost'}` : 'not set up — key or localhost only';
+    if (a.local[0]) $('#authUser').value = a.local[0];
+    const bar = $('#signedIn'); if (bar) { bar.innerHTML = a.user ? `Signed in as <b>${esc(a.user)}</b> · <a href="#" id="logoutLink">Sign out</a>` : ''; }
+  } catch { /* not admin */ }
+}
+$('#authSave').addEventListener('click', async () => {
+  try { const j = await secJson('/api/auth/local', { method: 'PUT', body: JSON.stringify({ user: $('#authUser').value, password: $('#authPass').value }) }); $('#authPass').value = ''; secSay('#authMsg', ' Saved' + (j.relogin ? ' — sign in again with the new account' : ''));
+    if (j.relogin) setTimeout(() => { location.href = '/login?next=%2Fadmin'; }, 1200); else loadAuth(); } catch (e) { secSay('#authMsg', ' ' + e.message, 'bad'); }
+});
+$('#authRemove').addEventListener('click', async () => {
+  if (!confirm('Remove the local editor account? (A machine "noc" login on the appliance is not affected.)')) return;
+  try { await secJson('/api/auth/local', { method: 'DELETE' }); secSay('#authMsg', ' Removed'); loadAuth(); } catch (e) { secSay('#authMsg', ' ' + e.message, 'bad'); }
+});
+document.addEventListener('click', async (e) => { if (e.target.id === 'logoutLink') { e.preventDefault(); await fetch(api('/api/logout'), { method: 'POST' }); location.href = '/login?next=%2Fadmin'; } });
+loadAuth();

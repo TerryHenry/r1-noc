@@ -52,6 +52,9 @@ tar -xzf "/cache/r1-noc-$VER.tgz" -C $M/opt/r1-noc --strip-components=1
 G=/guest
 install -m 0755 $G/r1-noc-firstboot $G/r1-noc-cert $G/r1-noc-banner $G/r1-noc-config $M/usr/local/sbin/
 install -m 0644 $G/r1-noc.service $G/r1-noc-firstboot.service $G/r1-noc-banner.service $G/r1-noc-banner.timer $M/etc/systemd/system/
+install -o root -g root -m 0755 $M/opt/r1-noc/scripts/r1-noc-authcheck $M/usr/local/sbin/r1-noc-authcheck
+echo noc > $M/etc/r1-noc-auth-users
+printf 'r1noc ALL=(root) NOPASSWD: /usr/local/sbin/r1-noc-authcheck *\n' > $M/etc/sudoers.d/r1-noc-auth; chmod 0440 $M/etc/sudoers.d/r1-noc-auth
 install -m 0644 $G/10-ethernet.network $M/usr/local/share/r1-noc/10-ethernet.network
 install -D -m 0644 $G/10-ethernet.network $M/etc/systemd/network/10-ethernet.network
 echo "== users, services, cleanup"
