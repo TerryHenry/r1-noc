@@ -116,6 +116,9 @@ Run it under a process manager so it survives reboots. Templates for systemd (Li
 
 ## 10. Secure it
 
+Turn on HTTPS in the editor (**HTTPS & certificate**), and take a first backup (**Backup & restore**).
+
+
 By default anyone who can reach the port can **view** the dashboard, and the editor only works from the server itself.
 For a shared network, set a view key and an admin key — see
 [Security](USER_GUIDE.md#security).

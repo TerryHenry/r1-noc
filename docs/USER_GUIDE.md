@@ -19,7 +19,7 @@ shows the result. You design the screens in a browser-based editor.
 11. [History](#history)
 12. [Reports](#reports)
 13. [Configuration](#configuration)
-14. [Security](#security)
+14. [Security](#security) · [HTTPS and certificates](#https-and-certificates) · [Backup and restore](#backup-and-restore) · [Software updates](#software-updates)
 15. [Permissions and the API key](#permissions-and-the-api-key)
 16. [Running it permanently](#running-it-permanently)
 17. [Troubleshooting](#troubleshooting)
@@ -607,6 +607,10 @@ Settings come from environment variables, an optional `.env` file in the project
 | `NOC_ADMIN_KEY` | — | allows the editor remotely, with `?key=` |
 | `NOC_DEMO` | — | `1` = synthetic data, no credentials needed |
 | `NOC_DATA_DIR` | `./data` | where settings, layout and history live |
+| `HTTPS_PORT` | `8443` | overrides the HTTPS port saved in the editor |
+| `NOC_UPGRADE` | on | `off` disables in-app software updates and rollback |
+| `NOC_RESTART` | auto | after an update: `exit` (a service manager restarts it) or `respawn` (the app starts a new copy of itself) |
+| `NOC_DEMO_MSP` | — | with `NOC_DEMO=1`: pretend three customers (`npm run demo:msp`) |
 
 ### Files in `data/`
 
@@ -619,8 +623,12 @@ Settings come from environment variables, an optional `.env` file in the project
 | `notify.json` | notification channels incl. secrets (mode 600) |
 | `reports.json`, `reports/` | report definitions and generated reports |
 | `ticker.json` | ticker options, custom messages and feed definitions (kept owner-only) |
+| `tls/` | HTTPS settings, certificate and private key (`server.key` is mode 600) |
+| `backups/` | automatic daily configuration backups and pre-restore snapshots |
+| `upgrade/` | the previous program versions (for rollback) and the last update record |
+| `server.log` | output after an in-app restart |
 
-**Back up** the whole `data/` folder. **Never commit it** (it's git-ignored).
+**Back up** with the editor's *Backup & restore* panel (below) or by copying the `data/` folder. **Never commit it** (it's git-ignored).
 
 ---
 
@@ -634,13 +642,76 @@ Settings come from environment variables, an optional `.env` file in the project
 
 Other points:
 
-- The server speaks plain **HTTP**. For anything beyond a trusted network, put it behind a reverse proxy (nginx,
-  Caddy) that adds HTTPS.
+- The server speaks plain **HTTP** until you turn on HTTPS ([next section](#https-and-certificates)). Do that — or use a reverse
+  proxy such as nginx or Caddy — for anything beyond a trusted network, especially when keys are in use.
 - Secrets (API secret, SMTP password, webhook URLs) are stored in plain text in `data/` with owner-only permissions.
   Protect the server and its backups accordingly.
 - Use a **read-only** RUCKUS One role for the API key (see below).
 - A `?key=` in a URL can end up in browser history and proxy logs; for kiosks that's usually acceptable, for shared
   machines it may not be.
+
+---
+
+## HTTPS and certificates
+
+Editor → **HTTPS & certificate**. The wall and editor can be served over HTTPS directly, alongside the normal HTTP port.
+
+1. **Get a certificate** — either
+   - **Generate self-signed certificate**: enter the names/IPs people will use (suggestions are filled in from this server) and a
+     validity period. Quick and fine for a closed network, but browsers show a warning until each one trusts the certificate; or
+   - **Generate signing request (CSR)**: creates a key pair on the server and gives you the request to send to your CA
+     (company PKI, or a public CA). When the signed certificate comes back, paste it under *Install a certificate*
+     (server certificate first, then any intermediates) and leave the key box empty — the matching key is already here.
+2. **Install a certificate** you already have: paste the PEM certificate (and key), or load the files with the file picker. The key must
+   match the certificate and must not be passphrase-protected; the app checks both and rejects anything that does not fit, or has expired.
+3. Tick **Serve HTTPS**, choose the port (default **8443**; ports below 1024 need extra privileges) and **Apply**.
+   Replacing a certificate later takes effect immediately — no restart.
+
+Options: **Redirect HTTP to HTTPS** sends visitors who open the plain address to HTTPS (requests from the server itself are never redirected, so the editor stays reachable at `http://localhost:…`);
+**HSTS** tells browsers to insist on HTTPS for a year — only use it with a certificate browsers trust.
+
+The panel shows the installed certificate's subject, issuer, names, validity, SHA-256 fingerprint and whether the key matches. An alert rule,
+**TLS certificate expiring** (≤ 14 days, on by default for new installs), warns you before it lapses. The private key lives in `data/tls/server.key`
+(mode 600) and is never sent to a browser. Self-signed certificates and CSRs are made with the server's `openssl`; if it is missing, install a certificate you created elsewhere.
+Not included: automatic renewal (ACME / Let's Encrypt) — use a reverse proxy such as Caddy if you need that.
+
+---
+
+## Backup and restore
+
+Editor → **Backup & restore**. A backup is a single JSON file with your screens/views/schedules, alert rules, notification channels, ticker,
+scheduled reports, R1 connection and customers, and HTTPS settings. Metric history and generated report files are not included.
+
+- **Configuration only** — contains **no credentials**: R1 secrets, notification passwords and webhook URLs, and the TLS key are left out. Plain
+  JSON; safe to keep in version control or email to yourself.
+- **Full** — also contains the credentials and TLS key, so it is **always encrypted** (AES-256-GCM, key from your passphrase via scrypt). Without the
+  passphrase it cannot be read; there is no recovery if you lose it.
+- **Restore**: choose the file (and passphrase if encrypted), **Read backup** to see what it contains, tick the parts you want, **Restore selected**.
+  Every part is validated before anything changes, and your current configuration is saved first as `data/backups/pre-restore-….json`.
+  Credentials missing from a configuration-only backup **keep their current values** (matched by customer / channel), so you can restore a
+  layout onto a running system without re-typing secrets. A certificate and its key are restored together.
+- **Automatic copies**: once a day a credential-free backup is written to `data/backups/` (the last 14 are kept); they are listed in the panel for download.
+
+---
+
+## Software updates
+
+Editor → **Software update**. Upgrade in place from a downloaded release file:
+
+1. Download the release (`r1-noc-x.y.z.tgz`, or GitHub's **Download ZIP**). Releases are built with `npm run package` (a `.tgz` and its `.sha256` land in `dist/`).
+2. **Upload & check**. The server unpacks the file safely (it refuses absolute or `..` paths, symbolic links and oversized packages), checks that it is an R1 NOC Wall release, compares versions, checks
+   the Node.js requirement, and shows you the SHA-256 (compare it with the published checksum), the release notes (`CHANGELOG.md`) and which parts it replaces.
+3. **Test, install & restart**. The new version is first **started in a throw-away demo instance** on a spare port; only if that works is the current program backed up
+   (`data/upgrade/previous/`, last three kept), the files swapped in, and the app restarted. A failed test leaves everything as it was.
+4. **Roll back** at any time from the same panel. Your `data/` folder and `.env` are never touched, so screens, history and credentials carry over.
+
+Restarting: under a service manager (systemd, launchd, pm2, Docker — detected automatically, or set `NOC_RESTART=exit`) the app exits and is restarted by it; otherwise it starts a new copy of itself and
+writes its output to `data/server.log`. Displays reconnect on their own.
+
+From the command line (also works while the app is stopped): `node scripts/upgrade.js r1-noc-x.y.z.tgz` (add `--yes` to skip the question) and `node scripts/upgrade.js --rollback`.
+
+> **Trust.** Installing a release runs the code in that file on your server, so updates are admin-only (the editor from the server itself, or with `NOC_ADMIN_KEY`) and you should install only
+> files from a source you trust. Set `NOC_UPGRADE=off` to disable the feature. A `.zip` needs `bsdtar` (macOS, Windows) or `unzip` on the server; `.tgz` needs only `tar`.
 
 ---
 
