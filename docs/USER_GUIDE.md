@@ -523,10 +523,20 @@ a venue (DPSK, guests, identity groups) are unaffected.
 
 ## MSP mode (multiple customers)
 
-RUCKUS One API keys belong to **one tenant**, so a managed-service NOC uses one API application per customer tenant. In the
-editor open **Customers (MSP)**, press **+ Add customer**, and enter a name, that customer's Tenant ID, Client ID, Client
-secret and region. **Save customers**, then **Test** on each row. (Secrets are write-only, like the main connection.)
-While the list is empty the single connection is used, exactly as before; once it has entries, *only* the customers are polled.
+There are two ways to connect your customers (use either, or both together). In the editor open **Customers (MSP)**.
+
+**Option A — one MSP account (recommended).** R1's *delegated mode* lets an MSP's own API key act on behalf of the customers it manages.
+1. In RUCKUS One, switch to the **MSP's own account** — not the *MSP Customers* pages (those have no Administration menu). Open
+   *Administration → Account Management → Settings* and create an **Application Token**; note the tenant ID (it is in the page address), client ID and secret.
+2. In **Customers (MSP) → Option A**, tick *Use the MSP account*, enter the tenant ID, client ID and secret, choose the region the MSP tenant lives in, and **Save & find customers**.
+3. The app lists your customers (R1's `tenants/query`) and shows them with checkboxes — untick any you don't want. Only **Active** customers are polled. New customers appear within about ten minutes.
+
+Each customer is then read by sending the MSP token with that customer's tenant ID, so you maintain one key instead of one per customer.
+
+**Option B — a key per customer.** R1 API keys belong to one tenant, so you can also add each customer's own application (name, tenant ID, client ID, secret, region) with **+ Add customer**,
+then **Save customers** and **Test** on each row. (Secrets are write-only, like the main connection.) Useful for customers the MSP doesn't manage, or if delegated access isn't available.
+
+While neither is set up the single connection is used, exactly as before; once either has entries, *only* those customers are polled.
 
 What changes:
 
@@ -537,6 +547,7 @@ What changes:
 - **Customer choice on every widget** (next to *Venue*): pin a tile to one customer and it shows only that customer's data,
   with the customer's name in the title. Venue pickers read *Customer / Venue*. Trend widgets pinned to a customer use that
   customer's own history (recorded from the day you enable MSP mode).
+- **Licensing (MSP account only)**: the Customers overview gains **Account** (paid / trial, days left) and **Licenses** columns; the **MSP licensing** preset adds *Next account expiry*, *Subscriptions expiring (60 d)*, *Trial and expiry watch*, *Licenses by customer* and *MSP subscriptions*. Alert rules can use *Days until the nearest customer account expires* and *MSP subscriptions expiring within 60 days*.
 - **Customers (MSP) widgets**: *Customers overview* (table: status, venues, APs and switches online, clients, critical/major
   alarms, connection success, open incidents), *Customer health* (list), clients / offline APs / alarms / critical alarms /
   connection success by customer, *APs by customer*, KPIs (customers online, customers with issues, critical alarms) and

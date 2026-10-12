@@ -4,7 +4,7 @@ let msp = [];
 const mspMsg = (t, cls = 'ok') => { const m = $('#mspMsg'); m.textContent = t; m.className = cls; };
 const MSP_REGIONS = [['https://api.ruckus.cloud', 'North America'], ['https://api.eu.ruckus.cloud', 'Europe'], ['https://api.asia.ruckus.cloud', 'Asia']];
 function renderMsp() {
-  $('#mspState').textContent = msp.length ? `${msp.filter((c) => c.enabled !== false).length} of ${msp.length} customers enabled` : 'not used — single connection';
+  $('#mspState').textContent = (mspAcct.enabled ? 'MSP account on' : '') + (mspAcct.enabled && msp.length ? ' + ' : '') + (msp.length ? `${msp.filter((c) => c.enabled !== false).length} of ${msp.length} own-key customers` : '') || 'not used — single connection';
   $('#mspRows').innerHTML = msp.map((c, i) => `<div class="top" style="border-top:1px solid var(--line);padding-top:.6rem;margin-top:.6rem" data-i="${i}">
     <label>Customer name<input data-m="name" value="${esc(c.name)}" size="22"></label>
     <label>Tenant ID<input data-m="tenantId" value="${esc(c.tenantId)}" size="32" autocomplete="off" spellcheck="false"></label>
@@ -14,7 +14,35 @@ function renderMsp() {
     <label class="inline"><input type="checkbox" data-m="enabled" ${c.enabled !== false ? 'checked' : ''}> Enabled</label>
     <button data-mt="${i}" ${c.id ? '' : 'disabled title="Save first"'}>Test</button><button class="danger" data-mr="${i}">Remove</button><span data-ms="${i}"></span></div>`).join('');
 }
-async function loadMsp() { const r = await fetch(api('/api/settings')); if (r.ok) { msp = (await r.json()).customers || []; renderMsp(); } }
+let mspAcct = { enabled: false, exclude: [] };
+function renderFound(info) {
+  const box = $('#mspFound'); if (!info) { box.innerHTML = ''; return; }
+  if (info.error) { box.innerHTML = `<div class="bad">${esc(info.error)}</div>`; return; }
+  const l = info.customers || []; if (!info.enabled && !l.length) { box.innerHTML = ''; return; }
+  box.innerHTML = `<div style="color:var(--muted);font-size:.85rem">${l.length} customer${l.length === 1 ? '' : 's'} found. Untick any you don't want on the wall:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:.3rem 1.2rem;margin:.3rem 0">${l.map((c) => `<label class="inline" style="text-transform:none;letter-spacing:0;font-size:.9rem;color:var(--text)"><input type="checkbox" data-ex="${esc(c.id)}" ${c.excluded ? '' : 'checked'}> ${esc(c.name)} <small style="color:var(--muted)">${esc(c.status)}${c.accountType ? ' · ' + esc(c.accountType) : ''}</small></label>`).join('')}</div>
+    <button id="mspExSave">Save selection</button> <span id="mspExMsg"></span>`;
+}
+async function loadMsp() {
+  const r = await fetch(api('/api/settings')); if (!r.ok) return; const j = await r.json(); msp = j.customers || []; mspAcct = j.msp || mspAcct; renderMsp();
+  $('#mspOn').checked = Boolean(mspAcct.enabled); $('#mspT').value = mspAcct.tenantId || ''; $('#mspC').value = mspAcct.clientId || ''; $('#mspS').placeholder = mspAcct.secretSet ? '•••••••• (saved)' : '(not set)'; if (mspAcct.apiBase) $('#mspR').value = mspAcct.apiBase;
+  if (mspAcct.enabled) { try { renderFound(await (await fetch(api('/api/msp'))).json()); } catch { /* ignore */ } }
+}
+$('#mspAcctSave').addEventListener('click', async () => {
+  const set = (t, c = 'ok') => { const m = $('#mspAcctMsg'); m.textContent = ' ' + t; m.className = c; };
+  try {
+    const body = { msp: { enabled: $('#mspOn').checked, tenantId: $('#mspT').value, clientId: $('#mspC').value, clientSecret: $('#mspS').value, apiBase: $('#mspR').value, oauthBase: $('#mspR').value } };
+    const r = await fetch(api('/api/settings'), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); const j = await r.json(); if (!r.ok) throw new Error(j.error || 'Save failed');
+    $('#mspS').value = ''; mspAcct = j.msp; if (!j.msp.enabled) { renderFound(null); return set('Saved (MSP account is off)'); }
+    set('Saved — looking for customers…', ''); const info = await (await fetch(api('/api/msp/refresh'), { method: 'POST' })).json(); renderFound(info);
+    set(info.error ? '' : `Found ${(info.customers || []).length} customer(s)`, info.error ? 'bad' : 'ok');
+  } catch (e) { set(e.message, 'bad'); }
+});
+document.addEventListener('click', async (e) => {
+  if (e.target.id !== 'mspExSave') return;
+  const ex = [...document.querySelectorAll('[data-ex]')].filter((c) => !c.checked).map((c) => c.dataset.ex);
+  try { const r = await fetch(api('/api/settings'), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ msp: { exclude: ex } }) }); if (!r.ok) throw new Error('Save failed'); $('#mspExMsg').textContent = ' Saved'; $('#mspExMsg').className = 'ok'; } catch (er) { $('#mspExMsg').textContent = ' ' + er.message; $('#mspExMsg').className = 'bad'; }
+});
 $('#mspRows').addEventListener('input', (e) => {
   const row = e.target.closest('[data-i]'); const f = e.target.dataset.m; if (!row || !f) return; const c = msp[Number(row.dataset.i)];
   if (f === 'enabled') c.enabled = e.target.checked; else if (f === 'apiBase') { c.apiBase = e.target.value; c.oauthBase = e.target.value; } else c[f] = e.target.value;

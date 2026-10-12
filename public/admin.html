@@ -110,6 +110,18 @@
   <details class="panel" id="mspPanel">
     <summary style="cursor:pointer;font-weight:600">Customers (MSP) <span id="mspState" style="font-weight:400;color:var(--muted);margin-left:.6rem"></span></summary>
     <p style="color:var(--muted);margin:.6rem 0">Managing several RUCKUS One tenants? Add one API application per customer (R1 API tokens are per tenant) and the wall shows them all, with a <b>Customer</b> choice on every widget. While this list is empty the single connection above is used. Secrets are stored on the server and never sent back.</p>
+    <h4 style="margin:1rem 0 .3rem;color:var(--muted)">Option A — one MSP account for all customers</h4>
+    <div style="color:var(--muted);font-size:.85rem;margin-bottom:.4rem">Create an Application Token in the <b>MSP's own account</b> (Administration → Account Management → Settings, while viewing the MSP tenant — not under "MSP Customers"). The app lists your customers and reads each one through R1's delegated access, so no per-customer keys are needed.</div>
+    <div class="top">
+      <label class="inline"><input type="checkbox" id="mspOn"> Use the MSP account</label>
+      <label>MSP tenant ID<input id="mspT" size="34" autocomplete="off" spellcheck="false"></label>
+      <label>Client ID<input id="mspC" size="30" autocomplete="off" spellcheck="false"></label>
+      <label>Client secret<input id="mspS" type="password" size="26" autocomplete="new-password"></label>
+      <label>Region<select id="mspR"><option value="https://api.ruckus.cloud">North America</option><option value="https://api.eu.ruckus.cloud">Europe</option><option value="https://api.asia.ruckus.cloud">Asia</option></select></label>
+      <button class="primary" id="mspAcctSave">Save &amp; find customers</button><span id="mspAcctMsg"></span>
+    </div>
+    <div id="mspFound" style="margin-top:.5rem"></div>
+    <h4 style="margin:1rem 0 .3rem;color:var(--muted)">Option B — a separate key per customer</h4>
     <div id="mspRows"></div>
     <div style="display:flex;gap:.6rem;align-items:center;margin-top:.8rem">
       <button id="mspAdd">+ Add customer</button>

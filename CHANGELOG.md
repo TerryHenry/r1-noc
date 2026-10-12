@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+- **MSP account mode** — one API key created in the MSP's own account lists every customer (`/tenants/query`) and reads each one through R1's *delegated access* (`x-rks-tenantid`). No per-customer keys needed (they still work alongside it). Untick customers you don't want on the wall.
+- New MSP widgets and presets: **MSP licensing** (nearest account/trial expiry, licenses per customer, MSP subscriptions, trial watch), Account and Licenses columns on the Customers overview; alert metrics for account expiry and expiring subscriptions.
+
 ## 0.2.1
 - **Editor sign-in**: a login page (`/login`) with user name and password instead of the long `?key=` address. On the virtual appliance the machine's **`noc` console login** works; elsewhere create an account in the editor (*Editor login*). Sessions, lockout after repeated failures, sign-out.
 - The appliance console banner and menu no longer lead with the key address (the key still works for scripts).

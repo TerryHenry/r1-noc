@@ -169,6 +169,13 @@ const handle = async (req, res) => {
           try { return json(res, 200, { ok: true, ...(await r1.test()) }); } catch (e) { return json(res, 200, { ok: false, error: e.message }); }
         }
       }
+      if (p === '/api/msp' || p === '/api/msp/refresh') {
+        if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access required' });
+        try {
+          if (p === '/api/msp' && req.method === 'GET') return json(res, 200, collect.mspInfo());
+          if (p === '/api/msp/refresh' && req.method === 'POST') { if (cfg.demo) return json(res, 200, { enabled: false, error: 'Demo mode', customers: [], entitlements: [] }); const r = await collect.mspRefresh(); cycle(); return json(res, 200, r); }
+        } catch (e) { return json(res, 200, { ...collect.mspInfo(), error: e.message }); }
+      }
       if (p === '/api/auth/local') {
         if (!canAdmin(req, url)) return json(res, 403, { error: 'Admin access required' });
         try {
