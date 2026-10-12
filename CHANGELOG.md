@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.1
+- **One connection panel.** *R1 connection* now starts with a switch — *One RUCKUS One account* / *MSP — one key for all my customers* / *MSP — a separate key for each customer* — and shows only the fields for the chosen mode. The separate *Customers (MSP)* panel is gone. Existing installs keep working (the mode is worked out from what you had configured).
+
 ## 0.3.0
 - **MSP account mode** — one API key created in the MSP's own account lists every customer (`/tenants/query`) and reads each one through R1's *delegated access* (`x-rks-tenantid`). No per-customer keys needed (they still work alongside it). Untick customers you don't want on the wall.
 - **Fleet statistics across all customers**: a *Customer* dimension on clients, APs, radios, switches, ports, alarms, DPSK, guests and networks (84 generated widgets: counts, throughput, traffic, signal, PoE… by customer, and over time by customer), fleet KPIs and totals, offline/throughput rankings, and an **MSP fleet statistics** preset.

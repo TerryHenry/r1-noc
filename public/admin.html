@@ -89,6 +89,12 @@
   </div>
   <details class="panel" id="conn">
     <summary style="cursor:pointer;font-weight:600">R1 connection <span id="connState" style="font-weight:400;color:var(--muted);margin-left:.6rem"></span></summary>
+    <div class="top" style="margin:.7rem 0">
+      <label>How do you connect to RUCKUS One?
+        <select id="s_mode"><option value="single">One RUCKUS One account</option><option value="msp">MSP — one key for all my customers</option><option value="customers">MSP — a separate key for each customer</option></select></label>
+      <label>Poll every (sec)<input id="s_poll" type="number" min="15" max="3600"></label>
+    </div>
+    <div id="modeSingle">
     <p style="color:var(--muted);margin:.6rem 0">Create an API application in RUCKUS One (Administration &rarr; Account Management &rarr; API Keys). The secret is stored on this server in <code>data/settings.json</code> and is never sent back to the browser.</p>
     <div class="top">
       <label>Tenant ID<input id="s_tenant" size="34" autocomplete="off" spellcheck="false"></label>
@@ -97,23 +103,16 @@
       <label>Region<select id="s_region"><option value="https://api.ruckus.cloud">North America</option><option value="https://api.eu.ruckus.cloud">Europe</option><option value="https://api.asia.ruckus.cloud">Asia</option><option value="custom">Custom…</option></select></label>
       <label>API base URL<input id="s_api" size="30" spellcheck="false"></label>
       <label>OAuth base URL<input id="s_oauth" size="30" spellcheck="false"></label>
-      <label>Poll every (sec)<input id="s_poll" type="number" min="15" max="3600"></label>
     </div>
     <div style="display:flex;gap:.6rem;align-items:center;margin-top:.8rem">
       <button class="primary" id="s_save">Save connection</button>
       <button id="s_test">Test connection</button>
-      <button id="s_diag">Diagnostics</button>
       <span id="s_msg"></span>
     </div>
-  <pre id="diag" style="display:none;max-height:22rem;overflow:auto;background:var(--panel-2);border:1px solid var(--line);border-radius:.4rem;padding:.6rem;margin-top:.8rem;font-size:.75rem"></pre>
-  </details>
-  <details class="panel" id="mspPanel">
-    <summary style="cursor:pointer;font-weight:600">Customers (MSP) <span id="mspState" style="font-weight:400;color:var(--muted);margin-left:.6rem"></span></summary>
-    <p style="color:var(--muted);margin:.6rem 0">Managing several RUCKUS One tenants? Add one API application per customer (R1 API tokens are per tenant) and the wall shows them all, with a <b>Customer</b> choice on every widget. While this list is empty the single connection above is used. Secrets are stored on the server and never sent back.</p>
-    <h4 style="margin:1rem 0 .3rem;color:var(--muted)">Option A — one MSP account for all customers</h4>
-    <div style="color:var(--muted);font-size:.85rem;margin-bottom:.4rem">Create an Application Token in the <b>MSP's own account</b> (Administration → Account Management → Settings, while viewing the MSP tenant — not under "MSP Customers"). The app lists your customers and reads each one through R1's delegated access, so no per-customer keys are needed.</div>
+    </div>
+    <div id="modeMsp" style="display:none">
+      <div style="color:var(--muted);font-size:.85rem;margin-bottom:.4rem">Create an Application Token in the <b>MSP's own account</b> (Administration → Account Management → Settings, while viewing the MSP tenant — not under "MSP Customers"). The app lists your customers and reads each one through R1's delegated access, so you need only this one key.</div>
     <div class="top">
-      <label class="inline"><input type="checkbox" id="mspOn"> Use the MSP account</label>
       <label>MSP tenant ID<input id="mspT" size="34" autocomplete="off" spellcheck="false"></label>
       <label>Client ID<input id="mspC" size="30" autocomplete="off" spellcheck="false"></label>
       <label>Client secret<input id="mspS" type="password" size="26" autocomplete="new-password"></label>
@@ -121,14 +120,20 @@
       <button class="primary" id="mspAcctSave">Save &amp; find customers</button><span id="mspAcctMsg"></span>
     </div>
     <div id="mspFound" style="margin-top:.5rem"></div>
-    <h4 style="margin:1rem 0 .3rem;color:var(--muted)">Option B — a separate key per customer</h4>
+    </div>
+    <div id="modeCust" style="display:none">
+    <div style="color:var(--muted);font-size:.85rem;margin-bottom:.4rem">Create an API application inside each customer's own account and add it here. Use this for customers your MSP account does not manage.</div>
     <div id="mspRows"></div>
     <div style="display:flex;gap:.6rem;align-items:center;margin-top:.8rem">
       <button id="mspAdd">+ Add customer</button>
       <button class="primary" id="mspSave">Save customers</button>
       <span id="mspMsg"></span>
     </div>
+    </div>
+    <div style="display:flex;gap:.6rem;align-items:center;margin-top:.8rem"><button id="s_diag">Diagnostics</button> <span id="s_msg2" style="color:var(--muted);font-size:.85rem">Shows exactly what R1 returns for your tenant.</span></div>
+  <pre id="diag" style="display:none;max-height:22rem;overflow:auto;background:var(--panel-2);border:1px solid var(--line);border-radius:.4rem;padding:.6rem;margin-top:.8rem;font-size:.75rem"></pre>
   </details>
+  
   <details class="panel" id="authPanel">
     <summary style="cursor:pointer;font-weight:600">Editor login <span id="authState" style="font-weight:400;color:var(--muted);margin-left:.6rem"></span></summary>
     <p style="color:var(--muted);margin:.6rem 0">Sign in to the editor with a user name and password instead of the <code>?key=</code> address. Create an account here; on the virtual appliance the machine's <code>noc</code> user already works. The password is stored hashed on this server.</p>

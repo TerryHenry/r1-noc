@@ -68,6 +68,8 @@ Open <http://localhost:8080/admin> and expand **R1 connection**:
 | Region | pick yours (fills in both URLs) |
 | Poll every (sec) | `60` is a good default (minimum 15) |
 
+Managing several customers (MSP)? Change *How do you connect to RUCKUS One?* at the top of the panel — see [MSP mode](USER_GUIDE.md#msp-mode-multiple-customers).
+
 Click **Save connection**, then **Test connection**. You should see *"Connected — N venues: …"*.
 
 > Prefer files over the GUI? Copy `.env.example` to `.env` and fill it in instead — see
@@ -75,8 +77,7 @@ Click **Save connection**, then **Test connection**. You should see *"Connected 
 
 The secret is stored on the server in `data/settings.json` (owner-readable only) and is never sent back to the browser.
 
-> **Managing several customers (MSP)?** API keys are per tenant. Skip the single connection and add each customer under
-> **Customers (MSP)** in the editor — see [MSP mode](USER_GUIDE.md#msp-mode-multiple-customers). `npm run demo:msp` previews it.
+> **Managing several customers (MSP)?** Use the first choice in **R1 connection** (*How do you connect to RUCKUS One?*) to switch to *MSP — one key for all my customers* — see [MSP mode](USER_GUIDE.md#msp-mode-multiple-customers). `npm run demo:msp` previews it.
 
 ## 5. Check the data looks right
 

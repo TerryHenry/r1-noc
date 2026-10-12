@@ -230,22 +230,27 @@ load();
 // ---------- R1 connection settings ----------
 const REGIONS = ['https://api.ruckus.cloud', 'https://api.eu.ruckus.cloud', 'https://api.asia.ruckus.cloud'];
 const sMsg = (t, cls = 'ok') => { const m = $('#s_msg'); m.textContent = t; m.className = cls; };
+function showMode(m) { for (const [k, id] of [['single', 'modeSingle'], ['msp', 'modeMsp'], ['customers', 'modeCust']]) { const e = $('#' + id); if (e) e.style.display = k === m ? '' : 'none'; } }
 function fillSettings(s) {
   $('#s_tenant').value = s.tenantId; $('#s_client').value = s.clientId; $('#s_secret').value = '';
   $('#s_secret').placeholder = s.secretSet ? '•••••••• (saved — leave blank to keep)' : '(not set)';
   $('#s_api').value = s.apiBase; $('#s_oauth').value = s.oauthBase; $('#s_poll').value = s.pollSeconds;
   $('#s_region').value = REGIONS.includes(s.apiBase) && s.apiBase === s.oauthBase ? s.apiBase : 'custom';
+  $('#s_mode').value = s.mode || 'single'; showMode(s.mode || 'single');
   const ok = s.tenantId && s.clientId && s.secretSet;
-  $('#connState').textContent = s.demo ? 'DEMO mode — synthetic data' : ok ? 'configured' : 'not configured';
-  if (!ok && !s.demo) $('#conn').open = true;
+  const msp = s.msp || {}, nc = (s.customers || []).length;
+  const state = s.mode === 'msp' ? (msp.tenantId && msp.secretSet ? 'MSP account' : 'MSP account — not set up yet') : s.mode === 'customers' ? (nc ? `${(s.customers || []).filter((c) => c.enabled !== false).length} of ${nc} customers` : 'customers — none added yet') : ok ? 'configured' : 'not configured';
+  $('#connState').textContent = s.demo ? 'DEMO mode — synthetic data' : state;
+  if (!s.demo && /not|none/.test(state)) $('#conn').open = true;
 }
 async function loadSettings() {
   const r = await fetch(api('/api/settings'));
   if (r.ok) fillSettings(await r.json()); else $('#connState').textContent = 'admin access required';
 }
+$('#s_mode').addEventListener('change', (e) => showMode(e.target.value));
 $('#s_region').addEventListener('change', (e) => { if (e.target.value !== 'custom') { $('#s_api').value = e.target.value; $('#s_oauth').value = e.target.value; } });
 $('#s_save').addEventListener('click', async () => {
-  const body = { tenantId: $('#s_tenant').value, clientId: $('#s_client').value, clientSecret: $('#s_secret').value, apiBase: $('#s_api').value, oauthBase: $('#s_oauth').value, pollSeconds: $('#s_poll').value };
+  const body = { mode: 'single', tenantId: $('#s_tenant').value, clientId: $('#s_client').value, clientSecret: $('#s_secret').value, apiBase: $('#s_api').value, oauthBase: $('#s_oauth').value, pollSeconds: $('#s_poll').value };
   const r = await fetch(api('/api/settings'), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const j = await r.json();
   if (!r.ok) return sMsg(j.error || 'Save failed', 'bad');

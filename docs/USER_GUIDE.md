@@ -523,20 +523,16 @@ a venue (DPSK, guests, identity groups) are unaffected.
 
 ## MSP mode (multiple customers)
 
-There are two ways to connect your customers (use either, or both together). In the editor open **Customers (MSP)**.
+Everything is in the editor's **R1 connection** panel. Its first choice is *How do you connect to RUCKUS One?*:
 
-**Option A — one MSP account (recommended).** R1's *delegated mode* lets an MSP's own API key act on behalf of the customers it manages.
-1. In RUCKUS One, switch to the **MSP's own account** — not the *MSP Customers* pages (those have no Administration menu). Open
-   *Administration → Account Management → Settings* and create an **Application Token**; note the tenant ID (it is in the page address), client ID and secret.
-2. In **Customers (MSP) → Option A**, tick *Use the MSP account*, enter the tenant ID, client ID and secret, choose the region the MSP tenant lives in, and **Save & find customers**.
-3. The app lists your customers (R1's `tenants/query`) and shows them with checkboxes — untick any you don't want. Only **Active** customers are polled. New customers appear within about ten minutes.
+- **One RUCKUS One account** — a single tenant (the default). Enter its tenant ID, client ID, secret and region.
+- **MSP — one key for all my customers** (recommended for MSPs). R1's *delegated mode* lets an MSP's own API key act for the customers it manages.
+  1. In RUCKUS One, switch to the **MSP's own account** — not the *MSP Customers* pages (those have no Administration menu). Open *Administration → Account Management → Settings*, create an **Application Token**, and note the tenant ID (it is in the page address), client ID and secret.
+  2. Choose this mode, enter them with the region the MSP tenant lives in, and **Save & find customers**.
+  3. The app lists your customers (R1's `tenants/query`) with checkboxes — untick any you don't want. Only **Active** customers are polled; new ones appear within about ten minutes.
+- **MSP — a separate key for each customer** — add each customer's own application (name, tenant ID, client ID, secret, region) with **+ Add customer**, then **Save customers** and **Test** on each row. Useful for customers your MSP account doesn't manage, or if delegated access isn't available.
 
-Each customer is then read by sending the MSP token with that customer's tenant ID, so you maintain one key instead of one per customer.
-
-**Option B — a key per customer.** R1 API keys belong to one tenant, so you can also add each customer's own application (name, tenant ID, client ID, secret, region) with **+ Add customer**,
-then **Save customers** and **Test** on each row. (Secrets are write-only, like the main connection.) Useful for customers the MSP doesn't manage, or if delegated access isn't available.
-
-While neither is set up the single connection is used, exactly as before; once either has entries, *only* those customers are polled.
+Only the fields for the chosen mode are shown, and only that mode is used for polling (your entries for the other modes are kept, so you can switch back). Installs that predate the switch keep working: the mode is worked out from what was configured.
 
 What changes:
 
