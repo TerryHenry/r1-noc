@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.3
+- **Switch event log from R1** (`POST /events/query`, entity type SWITCH, last 7 days): *Switch event log*, *Switch events needing attention* (loops, spanning tree, port, PoE, stack, offline), counts, by kind, by switch, per hour, and an alert metric. Kinds are inferred from the event wording; included in the **Switch events** preset.
+
 ## 0.3.2
 - **Switching events** (new widget group + **Switch events** preset): *flapping ports*, port link changes, spanning-tree state changes, err-disable events, a recent-events list, noisiest switches/venues and events per hour — derived from the app's own port polling (sampled every few minutes; the log is kept 7 days) — plus *loops detected*, *port-flap* and *TCP SYN flood* incidents and a switching-incident list from R1's analytics service. Works per venue and per customer; three new alert metrics.
 
