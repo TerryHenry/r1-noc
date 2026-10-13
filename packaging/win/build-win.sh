@@ -15,13 +15,13 @@ if [ ! -f "$Z" ] || [ "$(cat "$CACHE/node-win.version" 2>/dev/null)" != "$NODE_V
   echo "== downloading Node $NODE_VER (win-x64)"; curl -fL --progress-bar -o "$Z" "https://nodejs.org/dist/$NODE_VER/node-$NODE_VER-win-x64.zip"
   curl -fsSL "https://nodejs.org/dist/$NODE_VER/SHASUMS256.txt" | grep "node-$NODE_VER-win-x64.zip" | awk '{print $1"  '"$Z"'"}' | shasum -a 256 -c -; echo "$NODE_VER" > "$CACHE/node-win.version"
 fi
-unzip -q -j "$Z" "node-$NODE_VER-win-x64/node.exe" -d "$W"
+unzip -q -j "$Z" "node-$NODE_VER-win-x64/node.exe" "node-$NODE_VER-win-x64/LICENSE" -d "$W"
 echo "== embedding the launcher"
 cp packaging/win/launcher.js "$W/"; echo '{"main":"launcher.js","output":"sea.blob","disableExperimentalSEAWarning":true,"useCodeCache":false,"useSnapshot":false}' > "$W/sea.json"
 ( cd "$W" && node --experimental-sea-config sea.json >/dev/null )
 python3 packaging/win/pe_prepare.py "$W/node.exe" "$W/R1-NOC-Wall.exe"
 npx --yes postject "$W/R1-NOC-Wall.exe" NODE_SEA_BLOB "$W/sea.blob" --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2 >/dev/null
-cp "$W/R1-NOC-Wall.exe" "$W/stage/"; tar -xzf "dist/r1-noc-$VER.tgz" -C "$W/stage/app" --strip-components=1
+cp "$W/R1-NOC-Wall.exe" "$W/stage/"; cp "$W/LICENSE" "$W/stage/NODE_LICENSE.txt"; tar -xzf "dist/r1-noc-$VER.tgz" -C "$W/stage/app" --strip-components=1
 cat > "$W/stage/README-Windows.txt" <<R
 R1 NOC Wall $VER for Windows
 ============================

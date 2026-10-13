@@ -46,7 +46,7 @@ grep -q "root=" $M/boot/grub/grub.cfg && sed -i "s#root=/dev/loop[0-9]*p3#root=U
 grep -c "root=UUID=$UUID_ROOT" $M/boot/grub/grub.cfg >/dev/null || { echo "grub.cfg has no UUID root"; grep -n "linux " $M/boot/grub/grub.cfg | head; exit 1; }
 
 echo "== app + runtime"
-tar -xJf /cache/node-linux-x64.tar.xz -C /tmp && install -m 0755 /tmp/node-*-linux-x64/bin/node $M/usr/local/bin/node
+tar -xJf /cache/node-linux-x64.tar.xz -C /tmp && install -m 0755 /tmp/node-*-linux-x64/bin/node $M/usr/local/bin/node && install -D -m 0644 /tmp/node-*-linux-x64/LICENSE $M/usr/share/doc/nodejs/copyright
 mkdir -p $M/opt/r1-noc $M/var/lib/r1-noc $M/usr/local/share/r1-noc
 tar -xzf "/cache/r1-noc-$VER.tgz" -C $M/opt/r1-noc --strip-components=1
 G=/guest
@@ -71,7 +71,7 @@ chroot $M /bin/bash -euxc '
   # getty: show /etc/issue on the serial console too
   systemctl enable serial-getty@ttyS0.service >/dev/null 2>&1 || true
   rm -f /etc/ssh/ssh_host_*; : > /etc/machine-id; rm -f /var/lib/dbus/machine-id
-  apt-get clean; rm -rf /var/lib/apt/lists/* /var/cache/apt/* /tmp/* /var/log/*.log /var/log/apt /usr/share/doc/* /usr/share/man/*
+  apt-get clean; rm -rf /var/lib/apt/lists/* /var/cache/apt/* /tmp/* /var/log/*.log /var/log/apt /usr/share/man/*; find /usr/share/doc -type f ! -name copyright -delete; find /usr/share/doc -type d -empty -delete
 ' > /work/config.log 2>&1 || { tail -30 /work/config.log; exit 1; }
 echo "R1 NOC Wall appliance. Run: sudo r1-noc-config" > $M/etc/motd
 /bin/bash -c "cat > $M/etc/issue <<'F'

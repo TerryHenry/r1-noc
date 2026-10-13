@@ -45,7 +45,7 @@ For Linux, a Raspberry Pi, or if you want the code. You need **Node.js 22.5 or n
 
 ```bash
 node --version          # v22.5.0 or higher
-git clone <your-repo-url> r1-noc
+git clone https://github.com/TerryHenry/r1-noc.git
 cd r1-noc
 npm run demo            # optional: synthetic data, no credentials → http://<server-ip>:8080
 ```

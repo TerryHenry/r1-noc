@@ -24,7 +24,7 @@ IS="$B/R1.iconset"; mkdir -p "$IS"; for s in 16 32 64 128 256 512; do sips -z $s
 iconutil -c icns "$IS" -o "$B/R1.icns"
 echo "== bundle"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/app"
-cp "$B/launcher" "$APP/Contents/MacOS/R1NOCWall"; cp "$B/node" "$APP/Contents/Resources/node"; cp "$B/R1.icns" "$APP/Contents/Resources/R1.icns"
+cp "$B/n-arm64/LICENSE" "$APP/Contents/Resources/NODE_LICENSE.txt"; cp "$B/launcher" "$APP/Contents/MacOS/R1NOCWall"; cp "$B/node" "$APP/Contents/Resources/node"; cp "$B/R1.icns" "$APP/Contents/Resources/R1.icns"
 tar -xzf "dist/r1-noc-$VER.tgz" -C "$APP/Contents/Resources/app" --strip-components=1
 cat > "$APP/Contents/Info.plist" <<P
 <?xml version="1.0" encoding="UTF-8"?>

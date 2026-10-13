@@ -12,5 +12,22 @@
     "demo:msp": "NOC_DEMO=1 NOC_DEMO_MSP=1 node server.js",
     "package": "node scripts/package.js",
     "upgrade": "node scripts/upgrade.js"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TerryHenry/r1-noc.git"
+  },
+  "homepage": "https://github.com/TerryHenry/r1-noc#readme",
+  "bugs": {
+    "url": "https://github.com/TerryHenry/r1-noc/issues"
+  },
+  "keywords": [
+    "ruckus",
+    "ruckus-one",
+    "noc",
+    "dashboard",
+    "msp",
+    "wifi",
+    "switching"
+  ]
 }

@@ -47,7 +47,7 @@ Step-by-step for each option: **[Getting started](docs/GETTING_STARTED.md)**.
 **From source** (Linux, Raspberry Pi, developers — Node.js 22.5+ required):
 
 ```bash
-git clone <this-repo> r1-noc && cd r1-noc
+git clone https://github.com/TerryHenry/r1-noc.git && cd r1-noc
 npm run demo          # synthetic data, no credentials needed → http://<server-ip>:8080
 npm run demo:msp      # …or a pretend three-customer MSP
 npm start             # real data: open http://<server-ip>:8080/admin → R1 connection (the address is printed at start)
@@ -172,3 +172,4 @@ Adding a widget is one entry in `lib/widgets.js` (or one field/measure in `lib/w
 ---
 
 *Unofficial tool — not an official RUCKUS / CommScope product. "RUCKUS One" is a product of its respective owner.*
+*[Security policy](SECURITY.md) · [Third-party software](THIRD_PARTY_NOTICES.md)*
