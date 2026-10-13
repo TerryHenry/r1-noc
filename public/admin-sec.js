@@ -147,3 +147,6 @@ $('#authRemove').addEventListener('click', async () => {
 });
 document.addEventListener('click', async (e) => { if (e.target.id === 'logoutLink') { e.preventDefault(); await fetch(api('/api/logout'), { method: 'POST' }); location.href = '/login?next=%2Fadmin'; } });
 loadAuth();
+
+// deep links: /admin#conn (or #secPanel, #bkPanel, #upPanel, #authPanel…) opens that panel
+{ const id = decodeURIComponent((location.hash || '').slice(1)); const el = id && document.getElementById(id); if (el && el.tagName === 'DETAILS') { el.open = true; setTimeout(() => el.scrollIntoView(), 400); } }

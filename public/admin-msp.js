@@ -24,7 +24,7 @@ function renderFound(info) {
 }
 async function loadMsp() {
   const r = await fetch(api('/api/settings')); if (!r.ok) return; const j = await r.json(); msp = j.customers || []; mspAcct = j.msp || mspAcct; renderMsp();
-  $('#mspT').value = mspAcct.tenantId || ''; $('#mspC').value = mspAcct.clientId || ''; $('#mspS').placeholder = mspAcct.secretSet ? '•••••••• (saved)' : '(not set)'; if (mspAcct.apiBase) $('#mspR').value = mspAcct.apiBase;
+  $('#mspT').value = mspAcct.tenantId || ''; $('#mspC').value = mspAcct.clientId || ''; $('#mspS').placeholder = mspAcct.secretSet ? '•••••••• (saved)' : '(not set)'; if (mspAcct.apiBase && [...$('#mspR').options].some((o) => o.value === mspAcct.apiBase)) $('#mspR').value = mspAcct.apiBase;
   if (j.mode === 'msp') { try { renderFound(await (await fetch(api('/api/msp'))).json()); } catch { /* ignore */ } }
 }
 $('#mspAcctSave').addEventListener('click', async () => {

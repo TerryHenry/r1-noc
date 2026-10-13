@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.4
+- Documentation refresh: rewritten README with screenshots, updated Getting started and User guide (current scope, MSP, switch events, install options).
+- Editor panels can be deep-linked (`/admin#conn`, `#secPanel`, `#bkPanel`, `#upPanel`, `#authPanel`).
+- *Switch events* preset reorganised to fit one screen; *MSP fleet statistics* uses per-customer trend lines that need no extra history.
+- MSP connection panel keeps North America selected when the saved API address is not one of the three regions.
+
 ## 0.3.3
 - **Switch event log from R1** (`POST /events/query`, entity type SWITCH, last 7 days): *Switch event log*, *Switch events needing attention* (loops, spanning tree, port, PoE, stack, offline), counts, by kind, by switch, per hour, and an alert metric. Kinds are inferred from the event wording; included in the **Switch events** preset.
 

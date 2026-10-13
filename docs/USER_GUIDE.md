@@ -44,9 +44,12 @@ shows the result. You design the screens in a browser-based editor.
 - Every browser gets live updates over a persistent connection — no page refresh needed.
 - Your layout, history and settings live in the `data/` folder next to the server.
 
+The server reads three things from RUCKUS One with an API key: the **public REST API** (venues, APs, switches, clients, alarms, ports, DPSK, guests…),
+R1's **analytics service** (connection success, incidents, top applications — experimental), and R1's **event log** (switch events). In **MSP mode** the same is done for every customer.
+
 **What this is not:** it does not embed or replay RUCKUS One's *Data Studio* dashboards. Data Studio only accepts a
-logged-in user's token, which an unattended server can't hold. Things that exist only in Data Studio — per-application
-usage, Wi-Fi-calling call duration, long-range history — are not available here. (Run Data Studio in a separate
+logged-in user's token, which an unattended server can't hold. Things that exist only in Data Studio — airtime,
+Wi-Fi-calling call duration, long-range history — are not available here. (Run Data Studio in a separate
 signed-in kiosk tab if you need them.)
 
 ---
@@ -211,6 +214,8 @@ to fill in. If a source fails, only the widgets that need it say so; the rest ke
 
 ### Switching events: flaps, spanning-tree changes, loops
 
+![Switch events](img/switch-events.png)
+
 The **Switch events** preset (and the *Switching events* group in the widget picker) covers the "what just happened on my switches" questions. Two sources:
 
 - **Port changes, from the app's own polling.** The server fetches switch ports every few minutes (only while a widget or alert rule needs them) and compares each port with the previous fetch: **link up/down**, **spanning-tree state changes** (for example forwarding → blocking), and **error-disable** events. The log is kept for 7 days in `data/port-events*.json`, so it survives restarts (the first fetch after a start only sets the baseline).
@@ -263,12 +268,17 @@ This approximates, but is not identical to, Data Studio's time-binned *Client Th
 - **AP radios.** *AP radios by band / channel / width* shows how your channels and channel widths are actually
   distributed (including per venue / AP group), and average TX power.
 
-> **Not available from the API:** airtime (busy / idle / utilization), per-application traffic, roaming-session counts,
-> session duration history, MCS rates and AP receive failures. Those exist only in Data Studio. For airtime this has been
+> **Not available from the API:** airtime (busy / idle / utilization), session duration history, MCS rates and AP receive failures.
+> Those exist only in Data Studio. (Per-application traffic, roaming success and connection experience *are* available — from R1's analytics service,
+> see *Client experience* below.) For airtime this has been
 > checked directly: R1's built-in *Airtime* report is Data Studio dashboard #14403, and its API rejects API-key tokens
 > (`The specified alg value is not allowed`), and none of the 31 published API specifications contains an airtime field.
 
 #### Client experience — connection success and failure stages (experimental)
+
+![Connection health](img/connection-health.png)
+![Top talkers and failures](img/top-talkers.png)
+![Incidents](img/incidents.png)
 
 R1's own analytics service (the one behind its Client Experience and health reports) *does* accept an API-key token, even
 though Data Studio doesn't. The server uses it to fetch, every 5 minutes and only while a widget needs it:
@@ -536,6 +546,8 @@ a venue (DPSK, guests, identity groups) are unaffected.
 
 ## MSP mode (multiple customers)
 
+![R1 connection — MSP account](img/editor-connection.png)
+
 Everything is in the editor's **R1 connection** panel. Its first choice is *How do you connect to RUCKUS One?*:
 
 - **One RUCKUS One account** — a single tenant (the default). Enter its tenant ID, client ID, secret and region.
@@ -546,6 +558,8 @@ Everything is in the editor's **R1 connection** panel. Its first choice is *How 
 - **MSP — a separate key for each customer** — add each customer's own application (name, tenant ID, client ID, secret, region) with **+ Add customer**, then **Save customers** and **Test** on each row. Useful for customers your MSP account doesn't manage, or if delegated access isn't available.
 
 Only the fields for the chosen mode are shown, and only that mode is used for polling (your entries for the other modes are kept, so you can switch back). Installs that predate the switch keep working: the mode is worked out from what was configured.
+
+![MSP overview](img/msp-overview.png)
 
 What changes:
 
@@ -561,6 +575,10 @@ What changes:
   (counts, throughput, traffic, signal, PoE and so on, as bars, donuts or tables), plus *clients / APs / alarms by customer over time*. Fleet scorecards (*Venues, APs, Switches, Clients,
   Throughput, Devices offline — all customers*), the **Fleet totals** table and rankings (*Offline devices by customer*, *Throughput by customer*) sit under **Customers (MSP)**.
   The **MSP fleet statistics** preset puts them on one screen. These widgets stay out of the picker until at least one customer is configured.
+![MSP fleet statistics](img/msp-fleet.png)
+![MSP rankings](img/msp-rankings.png)
+![MSP licensing](img/msp-licensing.png)
+
 - **Rankings and comparisons** (presets **MSP rankings**, **MSP trends**, **MSP fleet detail**): *Customer health score* (100 minus transparent penalties for offline APs/switches, critical and major alarms, poor signal and low connection success — the
   breakdown table shows exactly what cost points), AP availability, clients per AP (load), poor-signal clients, venues by customer, busiest venues across all customers, APs behind on firmware (compared with the newest version seen for the same model) and a firmware-versions table,
   licenses vs devices (headroom per customer), time to connect / failed connections / open incidents by customer (from the analytics service) and all open incidents across customers, plus throughput, clients, offline APs and critical alarms **by customer over time**.
@@ -670,6 +688,8 @@ Settings come from environment variables, an optional `.env` file in the project
 | an **editor account** (below) or the appliance's `noc` login | the editor works remotely at `/admin` after signing in — no key in the address |
 
 ### Signing in to the editor
+
+![Sign-in page](img/login.png)
 Instead of putting `?key=…` in the address, you can sign in at **`/login`** (opening `/admin` sends you there). Two kinds of account:
 
 - **Editor account** — in the editor, *Editor login*: choose a user name and a password (8+ characters). Stored hashed (scrypt) in `data/auth.json`. Lost the password? On the server run `node scripts/passwd.js <user> <password>` (or `--remove`).
@@ -874,9 +894,12 @@ Server logs go to the terminal (or the service log). Failed notifications and fa
   port status words, uptime format, DPSK/guest status values, AP group names, AP radio band strings — were mapped from the published schemas and should be
   confirmed once on your tenant with **Diagnostics**.
 - No Data Studio content: application usage, Wi-Fi-calling call duration, airtime, roaming/session history, MCS rates and long-range history are not in the public API. Throughput and traffic are *measured* by the server between polls (see above) and only exist from first run.
-- History begins at first run; weekly comparisons need a week of data.
+- History begins at first run; weekly comparisons need a week of data (and per-customer trends start when MSP mode is enabled).
+- The analytics service and event log are not part of R1's published API (the analytics service is undocumented): they can change without notice, and only the widgets that use them are affected.
+- Switch-port events are *sampled* (a flap faster than the port-fetch interval can be missed); event kinds from R1's event log are inferred from message wording.
+- The Windows installer / zip and the MSP account mode on a real MSP tenant with live data have had limited testing.
 - Alert state is in memory: restarting re-fires active alerts.
-- One server process, one tenant. Large tenants (many thousands of ports/clients) make the first fetch slower; heavy
+- One server process. It serves one tenant, or — in MSP mode — every customer, polled three at a time. Large tenants (many thousands of ports/clients) make the first fetch slower; heavy
   sources are cached.
 - Schedules and reports use the server's local time zone.
 - The venue filter doesn't apply to DPSK, guests, networks or identity groups.

@@ -3,6 +3,15 @@
 This gets you from nothing to a live NOC wall in about 15 minutes. You need a computer that stays on (a Mac, Linux box,
 Raspberry Pi 4/5, a VM) and any browser for the display(s).
 
+**Pick how you want to run it** (all are on the [Releases page](../../releases)):
+
+| | Best for | Go to |
+|---|---|---|
+| **Virtual appliance (.ova)** | a VM host (VMware, VirtualBox, Proxmox) — nothing to install, HTTPS included | *Quick start: virtual appliance* below |
+| **macOS app (.dmg)** | a Mac that stays on | drag to Applications, open it (menu bar "R1"), then step 3 |
+| **Windows (setup.exe / .zip)** | a Windows PC that stays on | run the installer or `R1-NOC-Wall.exe`, then step 3 |
+| **From source** | Linux, Raspberry Pi, anything with Node.js 22.5+ | steps 1–10 below |
+
 > **Tip:** try everything first in **demo mode** (step 2). It needs no credentials and shows realistic synthetic data,
 > so you can learn the editor before pointing it at your tenant.
 
@@ -68,7 +77,9 @@ Open <http://localhost:8080/admin> and expand **R1 connection**:
 | Region | pick yours (fills in both URLs) |
 | Poll every (sec) | `60` is a good default (minimum 15) |
 
-Managing several customers (MSP)? Change *How do you connect to RUCKUS One?* at the top of the panel — see [MSP mode](USER_GUIDE.md#msp-mode-multiple-customers).
+The fields above are for the default choice, **One RUCKUS One account**. The first drop-down switches to MSP modes (shown below in *MSP — one key for all my customers*).
+
+![R1 connection — MSP mode](img/editor-connection.png)
 
 Click **Save connection**, then **Test connection**. You should see *"Connected — N venues: …"*.
 
@@ -94,7 +105,7 @@ Go to **/admin**. The three starter screens — **Dashboard**, **Wi-Fi** and **S
 
 - **+ Add widget** opens a searchable catalog of 1,000+ widgets. Try searching `dpsk`, `vlan`, `poe`, `guest`, `ssid`.
 - **Duplicate** or **Copy to** (screen header) makes a copy of any screen, here or in another view; rename it with the *Screen name* box.
-- **+ Preset screen…** adds ready-made screens (RUCKUS One Dashboard / Wi-Fi / Switch, Overview (classic), Switching, Wi-Fi Calling, AP load (airtime stand-in), Connection health / Top talkers and failures / Incidents (experimental, from R1's analytics service), Wireless performance, Student experience, RF coverage, Throughput, Client mix).
+- **+ Preset screen…** adds ready-made screens (RUCKUS One Dashboard / Wi-Fi / Switch, Overview (classic), Switching, **Switch events**, Wi-Fi Calling, AP load (airtime stand-in), Connection health / Top talkers and failures / Incidents (experimental analytics), Wireless performance, Student experience, RF coverage, Throughput, Client mix, and — for MSPs — **MSP overview, MSP fleet statistics, MSP rankings, MSP trends, MSP licensing**).
 - Leave **Auto-fit (no gaps)** ticked and the screen tiles itself to fill the display.
 - Click **Save & apply** — every open display updates immediately.
 
