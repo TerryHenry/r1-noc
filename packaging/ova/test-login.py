@@ -8,7 +8,11 @@ cmd = ['qemu-system-x86_64', '-machine', 'q35', '-cpu', 'max', '-m', '2048', '-s
        '-netdev', 'user,id=n0,hostfwd=tcp::5080-:80,hostfwd=tcp::5443-:443', '-device', 'e1000,netdev=n0']
 c = pexpect.spawn(cmd[0], cmd[1:], encoding='utf-8', timeout=400); c.logfile_read = open('/work/login.log', 'w')
 ok = lambda m: print('PASS ' + m); bad = lambda m: print('FAIL ' + m)
-c.expect('login: '); time.sleep(70)                      # let first-boot (certificate, banner) finish
+c.expect('login: '); time.sleep(70)
+def pre(body):
+    r = subprocess.run(['curl', '-sk', '-m', '15', '-o', '/dev/null', '-w', '%{http_code}', '-X', 'POST', '-H', 'Content-Type: application/json', '-d', json.dumps(body), 'https://127.0.0.1:5443/api/login'], capture_output=True, text=True).stdout
+    return r
+print('web login with the default noc/noc BEFORE the console password change:', pre({'user': 'noc', 'password': 'noc'}), '(expect 401)')                      # let first-boot (certificate, banner) finish
 c.sendline(''); c.expect('login: ')
 print('--- banner shown on the login prompt:'); print(c.before[-700:])
 c.sendline('noc'); c.expect('Password: '); c.sendline('noc')

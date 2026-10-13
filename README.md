@@ -38,15 +38,20 @@ All of them update in place from a downloaded release file (editor → *Software
 
 ## Quick start
 
+1. **Download** the appliance, Mac app or Windows installer from the [Releases page](../../releases) — nothing else to install (no Node.js, no git).
+2. Open the editor, choose **How do you connect to RUCKUS One?** under **R1 connection** (one account, one MSP key, or a key per customer), fill it in and press **Test connection**.
+3. Add screens, put the wall address on a TV.
+
+Step-by-step for each option: **[Getting started](docs/GETTING_STARTED.md)**.
+
+**From source** (Linux, Raspberry Pi, developers — Node.js 22.5+ required):
+
 ```bash
 git clone <this-repo> r1-noc && cd r1-noc
 npm run demo          # synthetic data, no credentials needed → http://localhost:8080
 npm run demo:msp      # …or a pretend three-customer MSP
+npm start             # real data: open http://localhost:8080/admin → R1 connection
 ```
-
-Then connect your tenant: `npm start`, open <http://localhost:8080/admin>, choose how you connect under **R1 connection**
-(one account, one MSP key, or a key per customer), fill it in and press **Test connection**. Full walkthrough:
-**[Getting started](docs/GETTING_STARTED.md)**.
 
 ## Documentation
 

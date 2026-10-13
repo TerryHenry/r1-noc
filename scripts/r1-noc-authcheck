@@ -9,9 +9,10 @@ if (open(my $a, '<', '/etc/r1-noc-auth-users')) { @allowed = grep { /^[a-z_][a-z
 exit 3 unless grep { $_ eq $u } @allowed;
 my $pw = <STDIN>; exit 4 unless defined $pw; chomp $pw; exit 4 if length($pw) == 0 || length($pw) > 256;
 open(my $fh, '<', '/etc/shadow') or exit 5;
-my $hash; while (my $l = <$fh>) { my @f = split /:/, $l; if ($f[0] eq $u) { $hash = $f[1]; last; } }
+my ($hash, $lastchg); while (my $l = <$fh>) { my @f = split /:/, $l; if ($f[0] eq $u) { $hash = $f[1]; $lastchg = $f[2]; last; } }
 close $fh;
 exit 6 unless defined $hash && $hash =~ /^\$/;          # locked / no password
+exit 7 if defined $lastchg && $lastchg eq '0';            # password must be changed first (the appliance's first-login "noc" password): not usable over the network
 my $c = crypt($pw, $hash); exit 1 unless defined $c && length($c) == length($hash);
 my $diff = 0; $diff |= ord(substr($c, $_, 1)) ^ ord(substr($hash, $_, 1)) for 0 .. length($hash) - 1;
 exit($diff == 0 ? 0 : 1);

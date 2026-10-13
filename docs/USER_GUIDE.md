@@ -693,7 +693,7 @@ Settings come from environment variables, an optional `.env` file in the project
 Instead of putting `?key=…` in the address, you can sign in at **`/login`** (opening `/admin` sends you there). Two kinds of account:
 
 - **Editor account** — in the editor, *Editor login*: choose a user name and a password (8+ characters). Stored hashed (scrypt) in `data/auth.json`. Lost the password? On the server run `node scripts/passwd.js <user> <password>` (or `--remove`).
-- **Machine login (virtual appliance)** — the appliance's `noc` user and its console password work out of the box; change that password and the web sign-in follows. (A small root-owned helper checks the password; only the users listed in `/etc/r1-noc-auth-users`, default `noc`, can sign in this way.)
+- **Machine login (virtual appliance)** — the appliance's `noc` user and its console password; change that password and the web sign-in follows. Web sign-in is **refused until you have changed the first-login password at the console** (`noc` / `noc`), so a freshly imported appliance can't be entered with the default password. (A small root-owned helper checks the password; only the users listed in `/etc/r1-noc-auth-users`, default `noc`, can sign in this way.)
 
 Sessions last 12 hours and survive restarts; repeated wrong passwords lock that address out for a minute, then longer. The `?key=` address keeps working, and viewing the wall never needs a sign-in (unless you set a view key). Once an account exists, the "localhost needs no key" shortcut is off, so you sign in even on the server itself.
 Use HTTPS so the password is not sent in clear text.
