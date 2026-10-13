@@ -29,5 +29,6 @@
     "msp",
     "wifi",
     "switching"
-  ]
+  ],
+  "license": "MIT"
 }

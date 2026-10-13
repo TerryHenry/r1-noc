@@ -1,6 +1,6 @@
 # Third-party software
 
-R1 NOC Wall itself has **no npm dependencies**. The ready-made downloads include (or are built with) the following third-party software.
+R1 NOC Wall itself is MIT-licensed (see [LICENSE](LICENSE)) and has **no npm dependencies**. The ready-made downloads include (or are built with) the following third-party software.
 
 | Component | Where | License |
 |---|---|---|

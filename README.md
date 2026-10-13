@@ -172,4 +172,4 @@ Adding a widget is one entry in `lib/widgets.js` (or one field/measure in `lib/w
 ---
 
 *Unofficial tool — not an official RUCKUS / CommScope product. "RUCKUS One" is a product of its respective owner.*
-*[Security policy](SECURITY.md) · [Third-party software](THIRD_PARTY_NOTICES.md)*
+*Released under the [MIT License](LICENSE) · [Security policy](SECURITY.md) · [Third-party software](THIRD_PARTY_NOTICES.md)*
