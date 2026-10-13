@@ -105,7 +105,7 @@ Add to the viewer URL, e.g. `http://server:8080/?screen=Switching&scale=1.25`.
 
 ## The editor
 
-Open `http://localhost:8080/admin` (or click **Edit**). By default the editor works **only from the server itself**;
+Open `http://<server-ip>:8080/admin` (or click **Edit**; `localhost` also works on the server itself). By default the editor works **only from the server itself**;
 see [Security](#security) to allow it remotely.
 
 ![Editor](img/editor.png)

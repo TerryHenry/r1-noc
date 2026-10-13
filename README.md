@@ -48,9 +48,9 @@ Step-by-step for each option: **[Getting started](docs/GETTING_STARTED.md)**.
 
 ```bash
 git clone <this-repo> r1-noc && cd r1-noc
-npm run demo          # synthetic data, no credentials needed → http://localhost:8080
+npm run demo          # synthetic data, no credentials needed → http://<server-ip>:8080
 npm run demo:msp      # …or a pretend three-customer MSP
-npm start             # real data: open http://localhost:8080/admin → R1 connection
+npm start             # real data: open http://<server-ip>:8080/admin → R1 connection (the address is printed at start)
 ```
 
 ## Documentation

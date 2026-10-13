@@ -35,7 +35,7 @@ Then continue with [the common steps](#then-the-same-for-everyone) — the appli
 
 **Windows** — run `R1-NOC-Wall-x.y.z-win-x64-setup.exe` (per-user, no administrator rights; tick *Start when I sign in* if you want it), or unzip `…-win-x64.zip` anywhere and run `R1-NOC-Wall.exe`. The files are unsigned, so SmartScreen may say "unknown publisher" — choose *More info → Run anyway*. Windows Firewall will ask once: allow **private networks** so other computers can open the wall. A console window shows the addresses; minimise it (closing it stops the wall). The first run opens the editor for you. *(The Windows build has not yet been tested on a real Windows machine — please report problems.)*
 
-On both, the wall is at `http://localhost:8080/` and the editor at `http://localhost:8080/admin` (if 8080 is busy the app uses the next free port up to 8099 and shows it). Other computers open `http://<this-computer>:8080/`. By default the editor only works on the computer running the app; to edit from elsewhere, create an editor login ([details](USER_GUIDE.md#signing-in-to-the-editor)).
+On both, the wall is at `http://<server-ip>:8080/` and the editor at `http://<server-ip>:8080/admin`, where `<server-ip>` is this computer's address (Windows shows it in the console window; on a Mac it is in *System Settings → Network*; `localhost` also works on this computer). If 8080 is busy the app uses the next free port up to 8099 and shows it. Other computers open the wall at the same address. By default the editor only works on the computer running the app; to edit from elsewhere, create an editor login ([details](USER_GUIDE.md#signing-in-to-the-editor)).
 
 Then continue with [the common steps](#then-the-same-for-everyone).
 
@@ -47,10 +47,10 @@ For Linux, a Raspberry Pi, or if you want the code. You need **Node.js 22.5 or n
 node --version          # v22.5.0 or higher
 git clone <your-repo-url> r1-noc
 cd r1-noc
-npm run demo            # optional: synthetic data, no credentials → http://localhost:8080
+npm run demo            # optional: synthetic data, no credentials → http://<server-ip>:8080
 ```
 
-Demo mode shows realistic rotating screens (and a couple of demo faults, so you'll see the alert takeover) so you can learn the editor before pointing it at your tenant; `npm run demo:msp` simulates a three-customer MSP. Stop it with `Ctrl+C`. When you're ready for your own data: `npm start`, then open <http://localhost:8080/admin>.
+Demo mode shows realistic rotating screens (and a couple of demo faults, so you'll see the alert takeover) so you can learn the editor before pointing it at your tenant; `npm run demo:msp` simulates a three-customer MSP. Stop it with `Ctrl+C`. When you're ready for your own data: `npm start`, then open `http://<server-ip>:8080/admin` (the address is printed when it starts).
 
 Then continue with [the common steps](#then-the-same-for-everyone).
 

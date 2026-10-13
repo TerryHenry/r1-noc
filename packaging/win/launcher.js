@@ -33,7 +33,8 @@ const free = (p) => new Promise((res) => { const s = net.createServer(); s.once(
   if (!port) { for (let p = 8080; p <= 8099; p++) if (await free(p)) { port = p; break; } port = port || 8080; fs.writeFileSync(portFile, String(port)); }
   Object.assign(process.env, { PORT: String(port), NOC_DATA_DIR: data, NOC_SUPERVISED: '', NOC_RESTART: process.env.NOC_RESTART || 'respawn', NOC_RESPAWN_CMD: JSON.stringify({ cmd: exe, args: [] }) });
   process.title = 'R1 NOC Wall'; process.chdir(appDir);
-  console.log(`R1 NOC Wall  —  wall: http://localhost:${port}/   editor: http://localhost:${port}/admin\nData: ${data}\nLeave this window open (minimise it); close it to stop the wall.\n`);
+  const ips = Object.values(os.networkInterfaces()).flat().filter((i) => i && i.family === 'IPv4' && !i.internal).map((i) => i.address); const host = ips[0] || 'localhost';
+  console.log(`R1 NOC Wall\n  wall:   http://${host}:${port}/\n  editor: http://${host}:${port}/admin   (from this computer)\nData: ${data}\nLeave this window open (minimise it); close it to stop the wall.\n`);
   const first = !fs.existsSync(path.join(support, '.opened'));
   if (first || process.argv.includes('--open')) {
     fs.writeFileSync(path.join(support, '.opened'), '');

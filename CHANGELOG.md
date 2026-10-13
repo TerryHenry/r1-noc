@@ -2,6 +2,7 @@
 
 ## 0.3.5
 - **Security fix (appliance):** the web sign-in with the machine's `noc` login now **refuses while the account still has its first-login "must change" password** (`noc` / `noc`). Before, anyone who could reach a freshly imported appliance could sign in to the editor with the default password until someone changed it at the console. Change the password at the console first, then sign in on the web. Existing appliances: update the app, then run `sudo bash /opt/r1-noc/scripts/appliance-auth.sh` once to install the corrected helper (if you already changed the `noc` password you were not exposed).
+- The server prints its network addresses at start (`wall: http://<ip>:8080/`) and the docs use `<server-ip>`; the editor also works when you browse to the server's own IP from the server itself, not only `localhost`.
 - Getting started rewritten around the downloadable releases (appliance, Mac app, Windows) — no Node.js or git clone needed — with the source route as its own path.
 
 ## 0.3.4

@@ -1,5 +1,6 @@
 'use strict';
 const http = require('node:http');
+const os = require('node:os');
 const https = require('node:https');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -112,7 +113,13 @@ async function runReport(rep) {
 setInterval(() => { for (const rep of report.get()) if (report.due(rep) && collect.get().at) { report.mark(rep.id, 'Running…'); runReport(rep).catch((e) => { report.mark(rep.id, `Failed: ${e.message}`); console.error(`report "${rep.name}" failed: ${e.message}`); }); } }, 30000);
 
 // ---- auth ----
-const isLoopback = (req) => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+// "the server itself": loopback, or the machine's own address (so http://<server-ip>:8080/admin works when you browse from the server)
+let ownAddrs = new Set(), ownAt = 0;
+const isLoopback = (req) => {
+  const a = String(req.socket.remoteAddress || '').replace(/^::ffff:/, ''); if (a === '127.0.0.1' || a === '::1') return true;
+  if (Date.now() - ownAt > 30e3) { ownAt = Date.now(); ownAddrs = new Set(Object.values(os.networkInterfaces()).flat().filter(Boolean).map((i) => i.address)); }
+  return ownAddrs.has(a);
+};
 function keyOf(req, url) { return url.searchParams.get('key') || req.headers['x-noc-key'] || ''; }
 const canView = (req, url) => !cfg.viewKey || keyOf(req, url) === cfg.viewKey || keyOf(req, url) === cfg.adminKey && !!cfg.adminKey || !!auth.session(req);
 // Admin = the admin key, or a signed-in session, or (only when neither a key nor sign-in is configured) the machine itself.
@@ -355,6 +362,8 @@ let bindTries = 0;   // after an in-app restart the old process may still hold t
 server.on('error', (e) => { if (e.code === 'EADDRINUSE' && process.env.NOC_RESTARTED && bindTries++ < 40) return void setTimeout(() => server.listen(cfg.port), 500); console.error(`Cannot listen on port ${cfg.port}: ${e.message}`); process.exit(1); });
 server.listen(cfg.port, () => {
   applyTls();
-  console.log(`R1 NOC Wall ${upgrade.version()} on http://localhost:${cfg.port}  (${cfg.demo ? 'DEMO data' : 'live R1'}, poll ${cfg.pollSeconds}s)`);
-  console.log(`  viewer: /${cfg.viewKey ? '?key=<NOC_VIEW_KEY>' : ''}    editor: /admin${cfg.adminKey ? '?key=<NOC_ADMIN_KEY>' : ' (localhost only)'}`);
+  const ips = Object.values(os.networkInterfaces()).flat().filter((i) => i && i.family === 'IPv4' && !i.internal).map((i) => i.address);
+  console.log(`R1 NOC Wall ${upgrade.version()}  (${cfg.demo ? 'DEMO data' : 'live R1'}, poll ${cfg.pollSeconds}s)`);
+  for (const h of ips.length ? ips.slice(0, 3) : ['localhost']) console.log(`  wall:   http://${h}:${cfg.port}/${cfg.viewKey ? '?key=<NOC_VIEW_KEY>' : ''}\n  editor: http://${h}:${cfg.port}/admin${cfg.adminKey ? '?key=<NOC_ADMIN_KEY>' : ''}`);
+  console.log(cfg.adminKey || auth.enabled() ? '  (editor: sign in or use the key)' : '  (the editor works from this computer only until you set an editor login or key)');
 });
