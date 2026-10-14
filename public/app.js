@@ -313,6 +313,12 @@ if (q.get('guard') === '1' || (DISPLAY > 0 && q.get('guard') !== '0')) {
 function updateStatus() {
   const chip = $('#src');
   if (!data) { chip.textContent = 'connecting…'; chip.className = 'chip'; return; }
+  if (data.setup) {   // fresh install: nothing is wrong, it just needs its R1 credentials
+    $('#banner').classList.add('show'); $('#banner').style.background = 'var(--info)';
+    $('#banner').innerHTML = `${esc(data.setup)} <a href="${api('/admin')}" style="color:#fff;text-decoration:underline">Open the editor</a>`;
+    chip.className = 'chip warn'; chip.textContent = 'setup needed'; chip.title = data.setup; return;
+  }
+  $('#banner').style.background = '';
   const age = Date.now() - data.at; const stale = data.at && age > data.pollSeconds * 3000;
   const errs = Object.keys(data.errors || {});
   const core = ['venues', 'aps', 'switches', 'clients', 'alarms'];
