@@ -73,7 +73,7 @@ function buildData(venue = '') {
   const S = collect.get();
   const out = {};
   for (const wd of dash.allWidgets(layout)) out[wd.id] = applyTitle(wd, applyThresholds(wd, widgets.compute(scoped(wd, venue), S)));
-  return { at: S.at, serverNow: Date.now(), view: dash.scheduledView(layout), venue, source: S.source, setup: S.setup || '', errors: S.errors, pollSeconds: cfg.pollSeconds, alerts: rules.active(), summary: summaryOf(venue.startsWith('c:') ? widgets.customerView(S, venue.slice(2)) : S), ticker: feeds.ticker(), widgets: out };
+  return { at: S.at, serverNow: Date.now(), view: dash.scheduledView(layout), venue, source: S.source, setup: S.setup || '', starting: Boolean(S.starting), errors: S.errors, pollSeconds: cfg.pollSeconds, alerts: rules.active(), summary: summaryOf(venue.startsWith('c:') ? widgets.customerView(S, venue.slice(2)) : S), ticker: feeds.ticker(), widgets: out };
 }
 // One payload per distinct drill-down venue among the connected clients.
 function broadcastData() {
