@@ -19,9 +19,12 @@ unzip -q -j "$Z" "node-$NODE_VER-win-x64/node.exe" "node-$NODE_VER-win-x64/LICEN
 echo "== embedding the launcher"
 cp packaging/win/launcher.js "$W/"; echo '{"main":"launcher.js","output":"sea.blob","disableExperimentalSEAWarning":true,"useCodeCache":false,"useSnapshot":false}' > "$W/sea.json"
 ( cd "$W" && node --experimental-sea-config sea.json >/dev/null )
-python3 packaging/win/pe_prepare.py "$W/node.exe" "$W/R1-NOC-Wall.exe"
+python3 packaging/win/pe_prepare.py "$W/node.exe" "$W/node-unsigned.exe"
+echo "== icon and file properties"
+[ -d "$CACHE/tools/node_modules/resedit" ] || ( mkdir -p "$CACHE/tools" && cd "$CACHE/tools" && npm init -y >/dev/null 2>&1 && npm install resedit@2 --silent )
+APP_VERSION="$VER" node packaging/win/set-icon.js "$W/node-unsigned.exe" packaging/icon/icon.ico "$W/R1-NOC-Wall.exe" "$CACHE/tools"
 npx --yes postject "$W/R1-NOC-Wall.exe" NODE_SEA_BLOB "$W/sea.blob" --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2 >/dev/null
-cp "$W/R1-NOC-Wall.exe" "$W/stage/"; cp "$W/LICENSE" "$W/stage/NODE_LICENSE.txt"; tar -xzf "dist/r1-noc-$VER.tgz" -C "$W/stage/app" --strip-components=1
+cp "$W/R1-NOC-Wall.exe" "$W/stage/"; cp packaging/icon/icon.ico "$W/stage/R1-NOC-Wall.ico"; cp "$W/LICENSE" "$W/stage/NODE_LICENSE.txt"; tar -xzf "dist/r1-noc-$VER.tgz" -C "$W/stage/app" --strip-components=1
 cat > "$W/stage/README-Windows.txt" <<R
 R1 NOC Wall $VER for Windows
 ============================
@@ -50,7 +53,7 @@ elif command -v docker >/dev/null && docker info >/dev/null 2>&1; then
 fi
 if [ -n "$NSIS" ]; then
   echo "== installer ($NSIS makensis)"; EXE="dist/R1-NOC-Wall-$VER-win-x64-setup.exe"
-  if [ "$NSIS" = local ]; then makensis -V1 -DVERSION="$VER" -DSTAGE="$PWD/$W/stage" -DOUTFILE="$PWD/$EXE" packaging/win/installer.nsi
-  else docker run --rm -v "$PWD":/w -w /w r1noc-nsis makensis -V1 -DVERSION="$VER" -DSTAGE="/w/$W/stage" -DOUTFILE="/w/$EXE" packaging/win/installer.nsi; fi
+  if [ "$NSIS" = local ]; then makensis -V1 -DVERSION="$VER" -DSTAGE="$PWD/$W/stage" -DOUTFILE="$PWD/$EXE" -DICON="$PWD/packaging/icon/icon.ico" packaging/win/installer.nsi
+  else docker run --rm -v "$PWD":/w -w /w r1noc-nsis makensis -V1 -DVERSION="$VER" -DSTAGE="/w/$W/stage" -DOUTFILE="/w/$EXE" -DICON="/w/packaging/icon/icon.ico" packaging/win/installer.nsi; fi
   ( cd dist && shasum -a 256 "R1-NOC-Wall-$VER-win-x64-setup.exe" | tee "R1-NOC-Wall-$VER-win-x64-setup.exe.sha256" )
 else echo "(no makensis or Docker — skipped the installer)"; fi

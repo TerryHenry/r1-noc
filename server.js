@@ -127,7 +127,7 @@ const canAdmin = (req, url) => (cfg.adminKey && keyOf(req, url) === cfg.adminKey
 const secureReq = (req) => Boolean(req.socket.encrypted) || req.headers['x-forwarded-proto'] === 'https';
 
 // ---- http ----
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json' };
 const json = (res, code, body) => { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(body)); };
 
 async function readBody(req, max = 256 * 1024) {

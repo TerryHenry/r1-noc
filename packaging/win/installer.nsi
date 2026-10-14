@@ -6,6 +6,8 @@ Unicode true
 !endif
 Name "${NAME}"
 OutFile "${OUTFILE}"
+Icon "${ICON}"
+UninstallIcon "${ICON}"
 RequestExecutionLevel user
 InstallDir "$LOCALAPPDATA\Programs\R1 NOC Wall"
 InstallDirRegKey HKCU "Software\R1 NOC Wall" "InstallDir"
@@ -20,6 +22,7 @@ Section "R1 NOC Wall (required)" SecMain
   SectionIn RO
   SetOutPath "$INSTDIR"
   File "${STAGE}\R1-NOC-Wall.exe"
+  File "${STAGE}\R1-NOC-Wall.ico"
   File "${STAGE}\README-Windows.txt"
   File "${STAGE}\NODE_LICENSE.txt"
   SetOutPath "$INSTDIR\app"
@@ -30,8 +33,9 @@ Section "R1 NOC Wall (required)" SecMain
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\R1 NOC Wall" "DisplayVersion" "${VERSION}"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\R1 NOC Wall" "UninstallString" '"$INSTDIR\Uninstall.exe"'
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\R1 NOC Wall" "InstallLocation" "$INSTDIR"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\R1 NOC Wall" "DisplayIcon" "$INSTDIR\R1-NOC-Wall.ico"
   CreateDirectory "$SMPROGRAMS\R1 NOC Wall"
-  CreateShortcut "$SMPROGRAMS\R1 NOC Wall\R1 NOC Wall.lnk" "$INSTDIR\R1-NOC-Wall.exe" "--open" "$INSTDIR\R1-NOC-Wall.exe" 0
+  CreateShortcut "$SMPROGRAMS\R1 NOC Wall\R1 NOC Wall.lnk" "$INSTDIR\R1-NOC-Wall.exe" "--open" "$INSTDIR\R1-NOC-Wall.ico" 0
   CreateShortcut "$SMPROGRAMS\R1 NOC Wall\Uninstall R1 NOC Wall.lnk" "$INSTDIR\Uninstall.exe"
 SectionEnd
 
@@ -47,6 +51,7 @@ Section "Uninstall"
   RMDir "$SMPROGRAMS\R1 NOC Wall"
   RMDir /r "$INSTDIR\app"
   Delete "$INSTDIR\R1-NOC-Wall.exe"
+  Delete "$INSTDIR\R1-NOC-Wall.ico"
   Delete "$INSTDIR\README-Windows.txt"
   Delete "$INSTDIR\NODE_LICENSE.txt"
   Delete "$INSTDIR\Uninstall.exe"

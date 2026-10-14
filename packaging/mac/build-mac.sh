@@ -19,8 +19,8 @@ echo "== universal node"; lipo -create "$B/n-arm64/bin/node" "$B/n-x64/bin/node"
 echo "== launcher (Swift, universal)"
 for A in arm64 x86_64; do swiftc -O -target "$A-apple-macos12.0" -o "$B/launcher-$A" packaging/mac/main.swift; done
 lipo -create "$B/launcher-arm64" "$B/launcher-x86_64" -output "$B/launcher"
-echo "== icon"; swiftc -o "$B/icon" packaging/mac/icon.swift && "$B/icon" "$B/icon1024.png"
-IS="$B/R1.iconset"; mkdir -p "$IS"; for s in 16 32 64 128 256 512; do sips -z $s $s "$B/icon1024.png" --out "$IS/icon_${s}x${s}.png" >/dev/null; sips -z $((s*2)) $((s*2)) "$B/icon1024.png" --out "$IS/icon_${s}x${s}@2x.png" >/dev/null; done
+echo "== icon"
+IS="$B/R1.iconset"; mkdir -p "$IS"; for s in 16 32 64 128 256 512; do sips -z $s $s packaging/icon/icon-1024.png --out "$IS/icon_${s}x${s}.png" >/dev/null; sips -z $((s*2)) $((s*2)) packaging/icon/icon-1024.png --out "$IS/icon_${s}x${s}@2x.png" >/dev/null; done
 iconutil -c icns "$IS" -o "$B/R1.icns"
 echo "== bundle"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/app"

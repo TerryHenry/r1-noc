@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.9
+- **New app icon** on the macOS app, the Windows exe / installer / shortcuts (the exe now also says *R1 NOC Wall* in Task Manager and Explorer instead of "Node.js"), the browser tab (favicon) for the wall, editor and sign-in page, and the README.
+
 ## 0.3.8
 - **The wall no longer waits for the slowest data source after a start.** Right after (re)starting — for example after a software update — it showed "live · no data" until *every* source had finished, which could take minutes on a large tenant. Core data (venues, APs, switches, clients, alarms) now appears as soon as it arrives and the slower sources (ports, analytics, event log…) fill in afterwards. Until the first data arrives the chip reads *starting — fetching from RUCKUS One…*.
 - **No more hung polls.** Every request to RUCKUS One now has a 45-second deadline (`R1_TIMEOUT_MS`), so one unresponsive call becomes a visible source error instead of stalling the wall, and a watchdog restarts a poll that has been stuck for over five minutes.

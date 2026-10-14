@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/img/icon.png" alt="R1 NOC Wall" width="112"></p>
+
 # R1 NOC Wall
 
 A **server-side NOC wall display for RUCKUS One** — for a single site or a whole managed-service business. One small server polls
