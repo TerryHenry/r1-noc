@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.0
+- **Steady header.** The header at the top of the wall is now the same size on every screen, and the **◀ Hold ▶** buttons stay the same size and in the same place: they no longer move as screens with different names or numbers of rows rotate, or when *Hold* changes to *Resume*. The buttons now sit right after the wall title; the screen name, screen dots and view picker follow them. The header is sized from the window (not from each screen's widget scale), so on busy screens it is a little larger than before.
+
 ## 0.3.9
 - **New app icon** on the macOS app, the Windows exe / installer / shortcuts (the exe now also says *R1 NOC Wall* in Task Manager and Explorer instead of "Node.js"), the browser tab (favicon) for the wall, editor and sign-in page, and the README.
 
