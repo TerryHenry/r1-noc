@@ -13,11 +13,13 @@
 * { box-sizing: border-box; }
 html { font-size: 14px; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 400 1rem/1.35 ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-header.bar { display: flex; align-items: center; gap: 1rem; padding: .55rem 1rem; border-bottom: 1px solid var(--line); background: var(--panel); flex: 0 0 auto; }
-header.bar h1 { margin: 0; font-size: 1.1rem; font-weight: 650; letter-spacing: .01em; }
-.screen-name { color: var(--muted); font-size: 1rem; }
-.dots { display: flex; gap: .4rem; margin-left: .25rem; }
-.dots i { width: .55rem; height: .55rem; border-radius: 50%; background: var(--line); display: block; }
+/* header sizes are in em of --hu (set from the window size in app.js), not rem, which changes per screen */
+header.bar { font-size: var(--hu, 14px); display: flex; flex-wrap: nowrap; align-items: center; gap: 1em; height: 2.9em; box-sizing: border-box; padding: 0 1em; overflow: hidden; border-bottom: 1px solid var(--line); background: var(--panel); flex: 0 0 auto; }
+header.bar h1 { margin: 0; font-size: 1.1em; font-weight: 650; letter-spacing: .01em; white-space: nowrap; flex: none; }
+header.bar > * { flex-shrink: 0; }
+.screen-name { color: var(--muted); font-size: 1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto !important; }
+.dots { display: flex; gap: .4em; margin-left: .25em; }
+.dots i { width: .55em; height: .55em; border-radius: 50%; background: var(--line); display: block; }
 .dots i.on { background: var(--info); }
 .spacer { flex: 1; }
 .chip { font-size: .8rem; padding: .15rem .6rem; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
@@ -85,11 +87,13 @@ tr.ok td:first-child { box-shadow: inset 3px 0 var(--ok); } tr.warn td:first-chi
 #banner.show { display: block; }
 
 .dots i { cursor: pointer; }
-.ctl { display: flex; gap: .3rem; margin-left: .5rem; transition: opacity .4s; }
-.ctl button { font: inherit; font-size: .8rem; color: var(--muted); background: var(--panel-2); border: 1px solid var(--line); border-radius: .35rem; padding: .1rem .6rem; cursor: pointer; }
+.ctl { display: flex; gap: .3em; flex: none; transition: opacity .4s; }
+.ctl button { font: inherit; font-size: .8em; line-height: 1.4; color: var(--muted); background: var(--panel-2); border: 1px solid var(--line); border-radius: .35em; padding: .1em 0; width: 2.3em; text-align: center; white-space: nowrap; cursor: pointer; }
+.ctl #hold { width: 6.2em; }   /* fits both "❚❚ Hold" and "▶ Resume": the buttons never move or resize */
 .ctl button:hover { color: var(--text); border-color: var(--info); }
 .ctl button.held { color: var(--warn); border-color: var(--warn); }
-body.idle .ctl:not(.pinned) { opacity: 0; pointer-events: none; }
+body.idle .ctl:not(.pinned), body.idle .ctl-sel { opacity: 0; pointer-events: none; }
+.ctl-sel { transition: opacity .4s; }
 body.idle { cursor: none; }
 
 .mwrap { display: flex; flex-direction: column; height: 100%; }
@@ -98,7 +102,7 @@ body.idle { cursor: none; }
 .mleg span { display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; }
 .mleg i { width: .7rem; height: .7rem; border-radius: 2px; display: inline-block; }
 
-.ctl select { font: inherit; font-size: .8rem; color: var(--muted); background: var(--panel-2); border: 1px solid var(--line); border-radius: .35rem; padding: .1rem .3rem; }
+.ctl select, .ctl-sel { font: inherit; font-size: .8em; color: var(--muted); background: var(--panel-2); border: 1px solid var(--line); border-radius: .35rem; padding: .1rem .3rem; }
 .bar .l, .legend div, tbody tr td:first-child { cursor: pointer; }
 
 /* ticker */
@@ -155,3 +159,5 @@ body.sign #ticker .seg::before { margin-right: 3vh; }
 .stk-bar { display: flex; height: 1.6rem; background: var(--panel-2); border-radius: .35rem; overflow: hidden; }
 .stk-bar i { display: grid; place-items: center; color: #fff; font-style: normal; font-size: .8rem; font-weight: 650; min-width: 2px; } .stk-bar em { color: var(--faint); font-size: .8rem; padding: .25rem .6rem; }
 .stk-legend { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: .8rem; color: var(--muted); } .stk-legend i { display: inline-block; width: .65rem; height: .65rem; border-radius: 2px; margin-right: .35rem; }
+
+header.bar .chip { font-size: .8em; padding: .15em .6em; }

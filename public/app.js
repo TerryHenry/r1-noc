@@ -177,9 +177,12 @@ function fitScreen(widgets) {
   const rows = NocLayout.rowsNeeded(widgets);
   const banner = $('#banner').classList.contains('show') ? $('#banner').offsetHeight : 0;
   const tickerH = $('#ticker').classList.contains('off') ? 0 : $('#ticker').offsetHeight;
-  const avail = innerHeight - banner - tickerH;
-  // header ≈ 2.7rem, stage padding 1.5rem, row 5.2rem, gap .75rem
-  let f = avail / (2.7 + 1.5 + 5.2 * rows + 0.75 * (rows - 1));
+  // The header has its own size, from the window only, so it (and the ◀ Hold ▶ buttons) never change size or move between screens.
+  const hu = Math.max(8, Math.min(innerHeight / 48, innerWidth / 62)) * USER_SCALE;
+  document.documentElement.style.setProperty('--hu', `${hu}px`);
+  const avail = innerHeight - banner - tickerH - $('header.bar').offsetHeight;
+  // stage padding 1.5rem, row 5.2rem, gap .75rem
+  let f = avail / (1.5 + 5.2 * rows + 0.75 * (rows - 1));
   f = Math.max(8, Math.min(f, innerWidth / 62)) * USER_SCALE;
   document.documentElement.style.fontSize = `${f}px`;
 }
