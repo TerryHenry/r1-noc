@@ -17,7 +17,7 @@ for A in arm64 x64; do
 done
 echo "== universal node"; lipo -create "$B/n-arm64/bin/node" "$B/n-x64/bin/node" -output "$B/node"
 echo "== launcher (Swift, universal)"
-for A in arm64 x86_64; do swiftc -O -target "$A-apple-macos12.0" -o "$B/launcher-$A" packaging/mac/main.swift; done
+for A in arm64 x86_64; do swiftc -O -target "$A-apple-macos13.0" -o "$B/launcher-$A" packaging/mac/main.swift; done
 lipo -create "$B/launcher-arm64" "$B/launcher-x86_64" -output "$B/launcher"
 echo "== icon"
 IS="$B/R1.iconset"; mkdir -p "$IS"; for s in 16 32 64 128 256 512; do sips -z $s $s packaging/icon/icon-1024.png --out "$IS/icon_${s}x${s}.png" >/dev/null; sips -z $((s*2)) $((s*2)) packaging/icon/icon-1024.png --out "$IS/icon_${s}x${s}@2x.png" >/dev/null; done
@@ -34,7 +34,7 @@ cat > "$APP/Contents/Info.plist" <<P
   <key>CFBundleIdentifier</key><string>local.r1noc.wall</string><key>CFBundleExecutable</key><string>R1NOCWall</string>
   <key>CFBundleIconFile</key><string>R1</string><key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$VER</string><key>CFBundleVersion</key><string>$VER</string>
-  <key>LSMinimumSystemVersion</key><string>12.0</string><key>LSUIElement</key><true/><key>NSHighResolutionCapable</key><true/>
+  <key>LSMinimumSystemVersion</key><string>13.0</string><key>LSUIElement</key><true/><key>NSHighResolutionCapable</key><true/>
 </dict></plist>
 P
 codesign --force -s - "$APP/Contents/Resources/node"; codesign --force --deep -s - "$APP"
